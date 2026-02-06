@@ -1,0 +1,6 @@
+{
+  "buildCommand": "npm run build",
+  "env": {
+    "PDF_SERVICE_SECRET": "@pdf_service_secret"
+  }
+}
