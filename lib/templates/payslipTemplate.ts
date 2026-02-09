@@ -53,6 +53,10 @@ export interface PayslipTemplateProps {
   // Logo
   logoBase64: string;
   specificCode: string;
+
+  // Dynamic Content (from JobRole)
+  headerRows?: Array<{ label: string; value: number }>;
+  earningsRows?: Array<{ label: string; value: number }>;
 }
 
 export function generatePayslipTemplate(props: PayslipTemplateProps): string {
@@ -91,6 +95,8 @@ export function generatePayslipTemplate(props: PayslipTemplateProps): string {
     company,
     logoBase64,
     specificCode,
+    headerRows = [],
+    earningsRows = [],
   } = props;
 
   return `
@@ -172,7 +178,7 @@ export function generatePayslipTemplate(props: PayslipTemplateProps): string {
     .text-center { text-align: center; }
     .bold { font-weight: bold; }
     
-    /* Column widths */
+    /* Column widths - BALANCED */
     .col-label { width: 18%; }
     .col-value { width: 8%; text-align: right; font-family: 'CrashNumberingGothic', monospace; }
     
@@ -240,106 +246,176 @@ export function generatePayslipTemplate(props: PayslipTemplateProps): string {
     <!-- Payroll Details Table -->
     <table class="grid-border">
       <tr class="section-header">
-        <td colspan="4" class="text-center">EARNINGS</td>
+        <td colspan="3" class="text-center" style="width: 48.5%;">EARNINGS</td>
         <td style="width: 3%;"></td>
-        <td colspan="3" class="text-center">DEDUCTIONS</td>
+        <td colspan="3" class="text-center" style="width: 48.5%;">DEDUCTIONS</td>
       </tr>
 
-      <tr>
-        <td class="col-label" style="font-weight: bold; font-family: 'CrashNumberingGothic', monospace;"> Days: ${workingdays.toFixed(0)}</td>
-        <td class="col-label" style="font-weight: bold; font-family: 'CrashNumberingGothic', monospace;">RC: ${Number(numberofRC).toFixed(0)}</td>
-        <td class="col-label" style="font-weight: bold; font-family: 'CrashNumberingGothic', monospace;">DC: ${Number(numberofDC).toFixed(0)}</td>
-        <td style="width: 3%;"></td>
-        <td class="col-label">${deductionRows[0].label}</td>
-        <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace;">${deductionRows[0].value.toFixed(2)}</td>
-      </tr>
+      ${(() => {
+        const leftSideRows: string[] = [];
+        
+    
+        if (headerRows && headerRows.length > 0) {
+          leftSideRows.push(headerRows.map((h, idx) => {
+            const isLast = idx === headerRows.length - 1;
+            const remaining = 3 - idx;
+            const colspan = (isLast && remaining > 1) ? ` colspan="${remaining}"` : '';
+            return `
+              <td class="col-label" ${colspan} style="font-weight: bold; font-family: 'CrashNumberingGothic', monospace; font-size: 12px;">${h.label}: ${h.value.toFixed(0)}</td>
+            `;
+          }).join(''));
+        } else {
+          leftSideRows.push(`
+            <td class="col-label" style="font-weight: bold; font-family: 'CrashNumberingGothic', monospace; font-size: 12px;"> Days: ${workingdays.toFixed(0)}</td>
+            <td class="col-label" style="font-weight: bold; font-family: 'CrashNumberingGothic', monospace; font-size: 12px;">RC: ${Number(numberofRC).toFixed(0)}</td>
+            <td class="col-label" style="font-weight: bold; font-family: 'CrashNumberingGothic', monospace; font-size: 1px;">DC: ${Number(numberofDC).toFixed(0)}</td>
+          `);
+        }
 
-      <tr>
-        <td class="col-label">Basic</td>
-        <td class="col-value" colspan="2" style="font-weight: bold; font-family: 'CrashNumberingGothic', monospace;">${basicSalary.toFixed(2)}</td>
-        <td style="width: 3%;"></td>
-        <td class="col-label">${deductionRows[1].label}</td>
-        <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace;">${deductionRows[1].value.toFixed(2)}</td>
-      </tr>
+        // Earnings Rows
+        if (earningsRows && earningsRows.length > 0) {
+          earningsRows.forEach(e => {
+            leftSideRows.push(`
+              <td class="col-label" style="width: 30%;">${e.label}</td>
+              <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace; width: 18.5%;">${e.value.toFixed(2)}</td>
+            `);
+          });
+        } else {
+          // Default Earnings
+          leftSideRows.push(`
+            <td class="col-label" style="width: 30%;">Basic</td>
+            <td class="col-value" colspan="2" style="font-weight: bold; font-family: 'CrashNumberingGothic', monospace; width: 18.5%;">${basicSalary.toFixed(2)}</td>
+          `);
+          leftSideRows.push(`
+            <td class="col-label" style="width: 30%;">Bike & Fuel</td>
+            <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace; width: 18.5%;">${bikeFuelValue.toFixed(2)}</td>
+          `);
+          
+          // Note: dynamicAllowanceRowsHtml is special because it's already HTML
+          // We'll handle it below by injecting it if no earningsRows
+          
+          leftSideRows.push(`
+            <td class="col-label" style="width: 30%;">Mobile Data</td>
+            <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace; width: 18.5%;">${mobilDataValue.toFixed(2)}</td>
+          `);
+          leftSideRows.push(`
+            <td class="col-label" style="width: 30%;">Mobile Phone</td>
+            <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace; width: 18.5%;">${mobilePhoneValue.toFixed(2)}</td>
+          `);
+          leftSideRows.push(`
+            <td class="col-label" style="width: 30%;">80%</td>
+            <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace; width: 18.5%;">${valueof80.toFixed(2)}</td>
+          `);
+          leftSideRows.push(`
+            <td class="col-label" style="width: 30%;">Visit</td>
+            <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace; width: 18.5%;">${valueofVisit.toFixed(2)}</td>
+          `);
+          leftSideRows.push(`
+            <td class="col-label" style="width: 30%;">RC</td>
+            <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace; width: 18.5%;">${valueofRC.toFixed(2)}</td>
+          `);
+          leftSideRows.push(`
+            <td class="col-label" style="width: 30%;">100%</td>
+            <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace; width: 18.5%;">${valueof100.toFixed(2)}</td>
+          `);
+          leftSideRows.push(`
+            <td class="col-label" style="width: 30%;">Adjustment</td>
+            <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace; width: 18.5%;">${adjustmentNetValue.toFixed(2)}</td>
+          `);
+        }
 
-      <tr>
-        <td class="col-label">Bike & Fuel</td>
-        <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace;">${bikeFuelValue.toFixed(2)}</td>
-        <td style="width: 3%;"></td>
-        <td class="col-label">${deductionRows[2].label}</td>
-        <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace;">${deductionRows[2].value.toFixed(2)}</td>
-      </tr>
+        // --- PREPARE RIGHT SIDE (DEDUCTIONS) ---
+        const rightSideRows: string[] = [];
+        // Row 0: Ded 0
+        rightSideRows.push(`
+          <td class="col-label" style="width: 30%;">${deductionRows[0]?.label || ''}</td>
+          <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace; width: 18.5%;">${deductionRows[0]?.value ? deductionRows[0].value.toFixed(2) : ''}</td>
+        `);
+        // Row 1: Ded 1
+        rightSideRows.push(`
+          <td class="col-label" style="width: 30%;">${deductionRows[1]?.label || ''}</td>
+          <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace; width: 18.5%;">${deductionRows[1]?.value ? deductionRows[1].value.toFixed(2) : ''}</td>
+        `);
+        // Row 2: Ded 2
+        rightSideRows.push(`
+          <td class="col-label" style="width: 30%;">${deductionRows[2]?.label || ''}</td>
+          <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace; width: 18.5%;">${deductionRows[2]?.value ? deductionRows[2].value.toFixed(2) : ''}</td>
+        `);
+        // Row 3 (Special handling if dynamicAllowanceRowsHtml exists)
+        // For simplicity, we just keep the index-based approach
+        rightSideRows.push(`
+          <td class="col-label" style="width: 30%;">${deductionRows[3]?.label || ''}</td>
+          <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace; width: 18.5%;">${deductionRows[3]?.value ? deductionRows[3].value.toFixed(2) : ''}</td>
+        `);
+        // Row 4: Total Deduction
+        rightSideRows.push(`
+          <td class="col-label bold" style="width: 30%;">TOTAL DEDUCTION</td>
+          <td class="col-value bold" colspan="2" style="font-family: 'CrashNumberingGothic', monospace; width: 18.5%;">${totalDeduction.toFixed(2)}</td>
+        `);
+        // Row 5: Section Header (Employer Contribution)
+        rightSideRows.push(`
+          <td colspan="3" class="text-center bold" style="padding: 5px 0; width: 48.5%;">Employer Contribution</td>
+        `);
+        // Row 6: EPF 12%
+        rightSideRows.push(`
+          <td class="col-label" style="width: 30%;">EPF 12%</td>
+          <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace; width: 18.5%;">${epfEmployer.toFixed(2)}</td>
+        `);
+        // Row 7: ETF 3%
+        rightSideRows.push(`
+          <td class="col-label" style="width: 30%;">ETF 3%</td>
+          <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace; width: 18.5%;">${etfEmployer.toFixed(2)}</td>
+        `);
+        // Row 8: Total Contribution
+        rightSideRows.push(`
+          <td class="col-label bold" style="width: 30%;">Total Contribution</td>
+          <td class="col-value bold" colspan="2" style="font-family: 'CrashNumberingGothic', monospace; width: 18.5%;">${contributionTotal.toFixed(2)}</td>
+        `);
 
-      ${dynamicAllowanceRowsHtml}
+        // --- MERGE ROWS ---
+        let htmlRows = '';
+        const maxRows = Math.max(leftSideRows.length, rightSideRows.length);
+        
+        for (let i = 0; i < maxRows; i++) {
+          const left = leftSideRows[i] || '<td colspan="3" style="width: 48.5%;"></td>';
+          
+          // If we matched the section header in right side
+          if (rightSideRows[i]?.includes('Employer Contribution')) {
+             htmlRows += `
+               <tr class="section-header">
+                 ${left}
+                 <td style="width: 3%;"></td>
+                 ${rightSideRows[i]}
+               </tr>
+             `;
+             continue;
+          }
 
-      <tr>
-        <td class="col-label">Mobile Data</td>
-        <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace;">${mobilDataValue.toFixed(2)}</td>
-        <td style="width: 3%;"></td>
-        <td class="col-label">${deductionRows[3].label}</td>
-        <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace;">${deductionRows[3].value.toFixed(2)}</td>
-      </tr>
-
-      <tr>
-        <td class="col-label">Mobile Phone</td>
-        <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace;">${mobilePhoneValue.toFixed(2)}</td>
-        <td style="width: 3%;"></td>
-        <td class="col-label bold">TOTAL DEDUCTION</td>
-        <td class="col-value bold" colspan="2" style="font-family: 'CrashNumberingGothic', monospace;">${totalDeduction.toFixed(2)}</td>
-      </tr>
-
-      <tr class="section-header">
-        <td colspan="3"></td>
-        <td style="width: 3%;"></td>
-        <td colspan="4" class="text-center bold">Employer Contribution</td>
-      </tr>
-
-      <tr>
-        <td class="col-label">80%</td>
-        <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace;">${valueof80.toFixed(2)}</td>
-        <td style="width: 3%;"></td>
-        <td class="col-label">EPF 12%</td>
-        <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace;">${epfEmployer.toFixed(2)}</td>
-      </tr>
-
-      <tr>
-        <td class="col-label">Visit</td>
-        <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace;">${valueofVisit.toFixed(2)}</td>
-        <td style="width: 3%;"></td>
-        <td class="col-label">ETF 3%</td>
-        <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace;">${etfEmployer.toFixed(2)}</td>
-      </tr>
-
-      <tr>
-        <td class="col-label">RC</td>
-        <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace;">${valueofRC.toFixed(2)}</td>
-        <td style="width: 3%;"></td>
-        <td class="col-label"></td>
-        <td class="col-value" colspan="2"></td>
-      </tr>
-
-      <tr>
-        <td class="col-label">100%</td>
-        <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace;">${valueof100.toFixed(2)}</td>
-        <td style="width: 3%;"></td>
-        <td class="col-label"></td>
-        <td class="col-value" colspan="2"></td>
-      </tr>
-
-      <tr>
-        <td class="col-label">Adjustment</td>
-        <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace;">${adjustmentNetValue.toFixed(2)}</td>
-        <td style="width: 3%;"></td>
-        <td class="col-label bold">Total Contribution</td>
-        <td class="col-value bold" colspan="2" style="font-family: 'CrashNumberingGothic', monospace;">${contributionTotal.toFixed(2)}</td>
-      </tr>
+          const right = rightSideRows[i] || '<td colspan="3" style="width: 48.5%;"></td>';
+          
+          htmlRows += `
+            <tr>
+              ${left}
+              <td style="width: 3%;"></td>
+              ${right}
+            </tr>
+          `;
+          
+          // If we are at Row 2 and NOT using dynamic earnings, inject dynamicAllowanceRowsHtml
+          if (i === 2 && (!earningsRows || earningsRows.length === 0) && dynamicAllowanceRowsHtml) {
+            htmlRows += dynamicAllowanceRowsHtml;
+          }
+        }
+        
+        return htmlRows;
+      })()}
 
       <tr class="summary-row">
-        <td colspan="2" class="text-center">TOTAL EARNINGS</td>
-        <td class="col-value" style="font-size: 12px; font-family: 'CrashNumberingGothic', monospace;">${grossSalary.toFixed(2)}</td>
+        <td colspan="2" class="text-center" style="width: 40%;">TOTAL EARNINGS</td>
+        <td class="col-value" style="font-size: 12px; font-family: 'CrashNumberingGothic', monospace; width: 8.5%;">${grossSalary.toFixed(2)}</td>
         <td style="width: 3%;"></td>
-        <td colspan="2" class="text-center">NET PAY</td>
-        <td class="col-value bold" style="font-size: 13px; font-family: 'CrashNumberingGothic', monospace;">${netSalary.toFixed(2)}</td>
+        <td colspan="2" class="text-center" style="width: 40%;">NET PAY</td>
+        <td class="col-value bold" style="font-size: 13px; font-family: 'CrashNumberingGothic', monospace; width: 8.5%;">${netSalary.toFixed(2)}</td>
       </tr>
     </table>
 
