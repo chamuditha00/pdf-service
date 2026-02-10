@@ -1,3 +1,5 @@
+import { CRASH_NUMBERING_GOTHIC_BASE64 } from '../fonts';
+
 export interface PayslipTemplateProps {
   employeeName: string;
   jobTitle: string;
@@ -55,6 +57,9 @@ export interface PayslipTemplateProps {
   logoBase64: string;
   specificCode: string;
 
+  // Custom Font
+  fontBase64?: string;
+
   // Dynamic Content (from JobRole)
   headerRows?: Array<{ label: string; value: number }>;
   earningsRows?: Array<{ label: string; value: number }>;
@@ -97,9 +102,20 @@ export function generatePayslipTemplate(props: PayslipTemplateProps): string {
     company,
     logoBase64,
     specificCode,
+    fontBase64 = CRASH_NUMBERING_GOTHIC_BASE64,
     headerRows = [],
     earningsRows = [],
   } = props;
+
+  // Only include @font-face if we have the base64 string
+  const fontFaceStyle = fontBase64 
+    ? `@font-face {
+      font-family: 'CrashNumberingGothic';
+      src: url(data:font/truetype;charset=utf-8;base64,${fontBase64}) format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }`
+    : `/* Font base64 not provided */`;
 
   return `
 <!DOCTYPE html>
@@ -124,10 +140,7 @@ export function generatePayslipTemplate(props: PayslipTemplateProps): string {
       max-width: 900px;
       margin: 0 auto;
     }
-    @font-face {
-      font-family: 'CrashNumberingGothic';
-      src: local('CrashNumberingGothic');
-    }
+    ${fontFaceStyle}
     table {
       width: 100%;
       border-collapse: collapse;
