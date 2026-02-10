@@ -165,9 +165,15 @@ export function generateMonthlyAdvanceSummaryHTML(data: MonthlyAdvanceSummaryDat
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
+            page-break-inside: auto;
+          }
+          tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
           }
           thead {
             border-bottom: 1px solid #000;
+            display: table-header-group;
           }
           th {
             padding: 8px 12px;

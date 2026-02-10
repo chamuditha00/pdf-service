@@ -154,10 +154,17 @@ export function generateCustomAdvanceReportHTML({
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;
+            page-break-inside: auto;
+          }
+          
+          tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
           }
           
           thead {
             background-color: #f3f4f6;
+            display: table-header-group;
           }
           
           thead tr {

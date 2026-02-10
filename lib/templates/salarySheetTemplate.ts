@@ -96,9 +96,18 @@ export function generateSalarySheetTemplate(props: SalarySheetTemplateProps): st
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
+            page-break-inside: auto;
+          }
+          tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
           }
           thead {
             border-bottom: 2px solid #000;
+            display: table-header-group;
+          }
+          tfoot {
+            display: table-footer-group;
           }
           th {
             padding: 4px 6px;

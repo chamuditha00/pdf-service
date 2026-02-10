@@ -142,7 +142,7 @@ async function loadCompanyLogoAsBase64(logoPath?: string): Promise<string> {
   }
 }
 
-function buildFooterHTML(company?: any, logoBase64?: string, verificationCode?: string): string {
+function buildFooterHTML(company?: any, logoBase64?: string, verificationCode?: string,): string {
   const companyName = company?.companyName || '';
   const addressParts = [
     company?.address?.street,
@@ -150,7 +150,6 @@ function buildFooterHTML(company?: any, logoBase64?: string, verificationCode?: 
     company?.address?.state,
     company?.address?.country,
   ].filter(Boolean);
-  const addressText = addressParts.length > 0 ? ` | ${addressParts.join(', ')}` : '';
   
   const phoneText = company?.companyPhone ? `Tel: ${company.companyPhone}` : '';
   const emailText = company?.companyEmail ? `E-mail: ${company.companyEmail}` : '';
@@ -158,34 +157,28 @@ function buildFooterHTML(company?: any, logoBase64?: string, verificationCode?: 
   const contactText = `${phoneText}${contactSeparator}${emailText}`;
 
   return `
-    <div style="width: 100%; font-family: Arial, sans-serif; padding: 0 12mm; box-sizing: border-box; position: relative; margin: 0; line-height: 1.2;">
-      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1mm; margin-top: 0;">
-        <div style="flex: 1;">
-          <div style="font-size: 8px; color: #333333; margin-bottom: 0; margin-top: 0; line-height: 1.2;">
-            ${companyName}${addressText}
-          </div>
-          <div style="font-size: 7px; color: #333333; margin: 0; line-height: 1.2;">
-            ${contactText}
+    <div style="width: 100%; font-family: Arial, sans-serif; padding: 1.5mm 10mm 1mm 10mm; box-sizing: border-box; position: relative; margin: 0; line-height: 0.9;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin: 0;">
+        <div style="flex: 1; max-width: 75%;">
+          <div style="font-size: 6px; font-weight: bold; color: #333333; margin: 0; line-height: 0.9;">
+            ${companyName}${addressParts.length ? ' | ' + addressParts.join(', ') : ''}${contactText ? ' | ' + contactText : ''}
           </div>
         </div>
-        ${logoBase64 ? `
-          <div style="width: 25mm; height: 10mm; display: flex; align-items: center; justify-content: flex-end; margin: 0; padding: 0;">
-            <img src="${logoBase64}" style="max-width: 25mm; max-height: 10mm; object-fit: contain;" />
+        ${(logoBase64 ) ? `
+          <div style="flex: 0 0 auto; max-width: 2%; text-align: right;">
+            <img src="${logoBase64}" alt="Company Logo" style="max-height: 5m; max-width: 100%; object-fit: contain;" />
           </div>
         ` : ''}
+       
       </div>
       
-      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e0e0e0; padding-top: 1mm; margin-bottom: 0; margin-top: 1mm;">
-        <div style="font-size: 6px; color: #808080; margin: 0; line-height: 1;">
-          ${verificationCode || ''}
+      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 0.2px solid #cccccc; padding-top: 0.3mm; margin-top: 0.3mm;">
+        <div style="font-size: 5px; color: #666666; margin: 0; line-height: 0.9;">
+          Ref: ${verificationCode || 'N/A'} | ${new Date().toLocaleDateString()}
         </div>
-        <div style="font-size: 6px; color: #808080; margin: 0; line-height: 1;">
-          Page <span class="pageNumber"></span> of <span class="totalPages"></span>
+        <div style="font-size: 5px; color: #666666; margin: 0; line-height: 0.9;">
+          Page <span class="pageNumber"></span>/<span class="totalPages"></span>
         </div>
-      </div>
-      
-      <div style="text-align: center; font-size: 6px; color: #999999; margin: 0; padding-top: 0.5mm; line-height: 1;">
-        This is a system-generated report. Generated on ${new Date().toLocaleString()}
       </div>
     </div>
   `;
@@ -314,14 +307,20 @@ export async function POST(req: NextRequest) {
 
     const isPayslip = templateName === 'payslip';
 
+    // Very large bottom margin to ensure footer never overlaps
+    const defaultMargin = {
+      top: '10mm',
+      right: '10mm',
+      bottom: isPayslip ? '10mm' : '50mm',
+      left: '10mm',
+    };
+
     const pdfBuffer = await generatePDFBuffer(html, {
       format: options.format || 'A4',
       orientation: options.orientation || 'portrait',
-      margin: options.margin || {
-        top: '10mm',
-        right: '10mm',
-        bottom: isPayslip ? '10mm' : '45mm',
-        left: '10mm',
+      margin: {
+        ...defaultMargin,
+        ...(options.margin || {}),
       },
       company: data.company,
       logoBase64: logoBase64,
