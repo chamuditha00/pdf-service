@@ -70,7 +70,7 @@ export const salarySheetSummaryTemplate = (data: SalarySheetTemplateProps) => {
           body { 
             font-family: Arial, sans-serif; 
             margin: 0; 
-            padding: 20px; 
+            padding: 20px 20px 40px 20px; 
           }
           .container { 
             max-width: 100%; 
@@ -235,8 +235,6 @@ export const salarySheetSummaryTemplate = (data: SalarySheetTemplateProps) => {
               </thead>
               <tbody>
                 ${tableRows}
-              </tbody>
-              <tfoot>
                 <tr class="total-row">
                   <td colspan="3">TOTAL</td>
                   <td class="currency">${employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + emp.basicSalary, 0).toFixed(2)}</td>
@@ -249,7 +247,7 @@ export const salarySheetSummaryTemplate = (data: SalarySheetTemplateProps) => {
                   <td class="currency">${employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + (emp.deductions?.other ?? 0), 0).toFixed(2)}</td>
                   <td class="currency bold">${totalNetSalary.toFixed(2)}</td>
                 </tr>
-              </tfoot>
+              </tbody>
             </table>
           </div>
         </div>

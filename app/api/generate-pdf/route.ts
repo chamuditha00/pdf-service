@@ -158,33 +158,33 @@ function buildFooterHTML(company?: any, logoBase64?: string, verificationCode?: 
   const contactText = `${phoneText}${contactSeparator}${emailText}`;
 
   return `
-    <div style="width: 100%; font-family: Arial, sans-serif; padding: 0 12mm; box-sizing: border-box; position: relative;">
-      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 3mm;">
+    <div style="width: 100%; font-family: Arial, sans-serif; padding: 0 12mm; box-sizing: border-box; position: relative; margin: 0; line-height: 1.2;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1mm; margin-top: 0;">
         <div style="flex: 1;">
-          <div style="font-size: 9px; color: #333333; margin-bottom: 2px;">
+          <div style="font-size: 8px; color: #333333; margin-bottom: 0; margin-top: 0; line-height: 1.2;">
             ${companyName}${addressText}
           </div>
-          <div style="font-size: 8px; color: #333333;">
+          <div style="font-size: 7px; color: #333333; margin: 0; line-height: 1.2;">
             ${contactText}
           </div>
         </div>
         ${logoBase64 ? `
-          <div style="width: 30mm; height: 12mm; display: flex; align-items: center; justify-content: flex-end;">
-            <img src="${logoBase64}" style="max-width: 30mm; max-height: 12mm; object-fit: contain;" />
+          <div style="width: 25mm; height: 10mm; display: flex; align-items: center; justify-content: flex-end; margin: 0; padding: 0;">
+            <img src="${logoBase64}" style="max-width: 25mm; max-height: 10mm; object-fit: contain;" />
           </div>
         ` : ''}
       </div>
       
-      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e0e0e0; padding-top: 2mm; margin-bottom: 2mm;">
-        <div style="font-size: 7px; color: #808080;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e0e0e0; padding-top: 1mm; margin-bottom: 0; margin-top: 1mm;">
+        <div style="font-size: 6px; color: #808080; margin: 0; line-height: 1;">
           ${verificationCode || ''}
         </div>
-        <div style="font-size: 8px; color: #808080;">
+        <div style="font-size: 6px; color: #808080; margin: 0; line-height: 1;">
           Page <span class="pageNumber"></span> of <span class="totalPages"></span>
         </div>
       </div>
       
-      <div style="text-align: center; font-size: 7px; color: #999999;">
+      <div style="text-align: center; font-size: 6px; color: #999999; margin: 0; padding-top: 0.5mm; line-height: 1;">
         This is a system-generated report. Generated on ${new Date().toLocaleString()}
       </div>
     </div>
@@ -314,7 +314,7 @@ export async function POST(req: NextRequest) {
       margin: options.margin || {
         top: '10mm',
         right: '10mm',
-        bottom: '20mm',
+        bottom: '45mm',
         left: '10mm',
       },
       company: data.company,

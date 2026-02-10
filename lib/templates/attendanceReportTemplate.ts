@@ -56,7 +56,7 @@ export const generateAttendanceReportHTML = ({
               body {
                 font-family: Arial, sans-serif;
                 margin: 0;
-                padding: 0;
+                padding: 0 0 40px 0;
               }
               .container {
                 max-width: 900px;

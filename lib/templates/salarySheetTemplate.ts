@@ -67,7 +67,7 @@ export function generateSalarySheetTemplate(props: SalarySheetTemplateProps): st
           }
           body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding: 20px;
+            padding: 20px 20px 40px 20px;
             background-color: white;
           }
           .container {

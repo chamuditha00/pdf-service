@@ -92,7 +92,7 @@ export function generateCustomAdvanceReportHTML({
           body {
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 0;
+            padding: 0 0 40px 0;
           }
           
           .container {

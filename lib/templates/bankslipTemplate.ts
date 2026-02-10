@@ -30,7 +30,7 @@ export function generateBankslipTemplate(props: BankslipTemplateProps): string {
       font-size: 11px;
       line-height: 1.4;
       margin: 0;
-      padding: 10px;
+      padding: 10px 10px 40px 10px;
     }
     table {
       width: 100%;

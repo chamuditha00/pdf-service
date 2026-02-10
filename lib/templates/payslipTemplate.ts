@@ -113,7 +113,7 @@ export function generatePayslipTemplate(props: PayslipTemplateProps): string {
       font-size: 12px;
       line-height: 1.35;
       margin: 0;
-      padding: 10px;
+      padding: 10px 10px 40px 10px;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }

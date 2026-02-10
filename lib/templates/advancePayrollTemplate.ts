@@ -65,6 +65,7 @@ export function generateAdvancePayrollHTML({
             display: flex;
             flex-direction: column;
             min-height: 100%;
+            padding-bottom: 40px;
           }
           .container {
             max-width: 100%;
