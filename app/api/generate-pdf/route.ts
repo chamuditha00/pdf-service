@@ -21,6 +21,7 @@ import { generateSalarySheetTemplate } from '@/lib/templates/salarySheetTemplate
 import { generateBankslipTemplate } from '@/lib/templates/bankslipTemplate';
 import { generateAdvancePayrollHTML } from '@/lib/templates/advancePayrollTemplate';
 import { generateCustomAdvanceReportHTML } from '@/lib/templates/customAdvanceReportTemplate';
+import { generateMonthlyAdvanceSummaryHTML } from '@/lib/templates/monthlyAdvanceSummaryTemplate';
 import { generateAttendanceReportHTML } from '@/lib/templates/attendanceReportTemplate';
 import { generateDepositToolsPDFContent } from '@/lib/templates/depositToolsPDFTemplate';
 import { generateLossesRecoveryPDFContent } from '@/lib/templates/lossesRecoveryPDFTemplate';
@@ -33,6 +34,7 @@ export type TemplateName =
   | 'bankslip'
   | 'advance-payroll'
   | 'custom-advance-report'
+  | 'monthly-advance-summary'
   | 'attendance-report'
   | 'deposit-tools'
   | 'losses-recovery'
@@ -45,6 +47,7 @@ const availableTemplates: TemplateName[] = [
   'bankslip',
   'advance-payroll',
   'custom-advance-report',
+  'monthly-advance-summary',
   'attendance-report',
   'deposit-tools',
   'losses-recovery',
@@ -84,6 +87,9 @@ function generateHTMLFromTemplate(templateName: TemplateName, data: any): string
 
     case 'custom-advance-report':
       return generateCustomAdvanceReportHTML(data);
+
+    case 'monthly-advance-summary':
+      return generateMonthlyAdvanceSummaryHTML(data);
 
     case 'attendance-report':
       return generateAttendanceReportHTML(data);
