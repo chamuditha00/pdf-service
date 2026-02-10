@@ -28,9 +28,11 @@ export const salarySheetSummaryTemplate = (data: SalarySheetTemplateProps) => {
   // Generate table rows with project headers
   const tableRows = Object.entries(groupedEmployees)
     .map(([project, projectEmployees]) => {
+      const projectNetTotal = projectEmployees.reduce((sum, emp) => sum + emp.netSalary, 0);
       const projectHeader = `
         <tr class="project-header">
-          <td colspan="13">${project}</td>
+          <td colspan="11">${project}</td>
+          <td class="currency">${projectNetTotal.toFixed(2)}</td>
         </tr>
       `;
       
@@ -76,26 +78,26 @@ export const salarySheetSummaryTemplate = (data: SalarySheetTemplateProps) => {
             max-width: 100%; 
           }
           .header { 
-            margin-bottom: 30px;
+            margin-bottom: 5px;
           }
           .company-header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 5px;
           }
           .company-header h1 {
-            font-size: 28px;
+            font-size: 18px;
             font-weight: bold;
             margin: 0 0 10px 0;
           }
           .report-title {
-            font-size: 18px;
+            font-size: 14px;
             color: #333;
             margin: 0;
           }
           .header-info {
             display: flex;
             justify-content: space-between;
-            margin-top: 20px;
+            margin-top: 10px;
           }
           .left-info, .right-info {
             display: flex;
@@ -110,14 +112,14 @@ export const salarySheetSummaryTemplate = (data: SalarySheetTemplateProps) => {
           .info-row .label {
             font-weight: normal;
             min-width: 140px;
-            font-size: 14px;
+            font-size: 11px;
           }
           .info-row .colon {
             margin: 0 5px;
           }
           .info-row .value {
             font-weight: normal;
-            font-size: 14px;
+            font-size: 11px;
             font-weight: bold;
           }
           .content h2 { 
@@ -131,8 +133,8 @@ export const salarySheetSummaryTemplate = (data: SalarySheetTemplateProps) => {
           }
           th, td { 
             border: none;
-            padding: 8px 10px; 
-            font-size: 13px;
+            padding: 4px 5px; 
+            font-size: 11px;
           }
           th { 
             background-color: #fff; 
@@ -149,8 +151,8 @@ export const salarySheetSummaryTemplate = (data: SalarySheetTemplateProps) => {
           .project-header td {
             font-weight: bold;
             background-color: #f5f5f5;
-            padding: 10px;
-            font-size: 14px;
+            padding: 4px 5px;
+            font-size: 11px;
             border-top: 1px solid #ddd;
             text-align: left;
           }
@@ -174,7 +176,7 @@ export const salarySheetSummaryTemplate = (data: SalarySheetTemplateProps) => {
           }
           .total-row td:first-child {
             text-align: center;
-          }x
+          }
         </style>
       </head>
       <body>
