@@ -282,9 +282,9 @@ export function generatePayslipTemplate(props: PayslipTemplateProps): string {
           }).join(''));
         } else {
           leftSideRows.push(`
-            <td class="col-label" style="font-weight: bold; font-family: 'CrashNumberingGothic', monospace;"> Days: ${workingdays.toFixed(0)}</td>
-            <td class="col-label" style="font-weight: bold; font-family: 'CrashNumberingGothic', monospace;">RC: ${Number(numberofRC).toFixed(0)}</td>
-            <td class="col-label" colspan="2" style="font-weight: bold; font-family: 'CrashNumberingGothic', monospace;">DC: ${Number(numberofDC).toFixed(0)}</td>
+            <td class="col-label" style="font-weight: bold; font-family: 'CrashNumberingGothic', monospace;"> Working Days: ${workingdays.toFixed(0)}</td>
+            <td class="col-label" style="font-weight: bold; font-family: 'CrashNumberingGothic', monospace;"> RC: ${Number(numberofRC).toFixed(0)}</td>
+            <td class="col-label" colspan="2" style="font-weight: bold; font-family: 'CrashNumberingGothic', monospace;"> DC: ${Number(numberofDC).toFixed(0)}</td>
           `);
         }
 
