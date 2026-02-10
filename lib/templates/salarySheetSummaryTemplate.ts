@@ -10,6 +10,8 @@ export const salarySheetSummaryTemplate = (data: SalarySheetTemplateProps) => {
       (deductions?.epfEmployer ?? 0) +
       (deductions?.etfEmployer ?? 0) +
       (deductions?.advance ?? 0) +
+      (deductions?.losses ?? 0) +
+      (deductions?.deposit ?? 0) +
       (deductions?.noPay ?? 0) +
       (deductions?.other ?? 0)
     );
@@ -31,7 +33,7 @@ export const salarySheetSummaryTemplate = (data: SalarySheetTemplateProps) => {
       const projectNetTotal = projectEmployees.reduce((sum, emp) => sum + emp.netSalary, 0);
       const projectHeader = `
         <tr class="project-header">
-          <td colspan="11">${project}</td>
+          <td colspan="13">${project}</td>
           <td class="currency">${projectNetTotal.toFixed(2)}</td>
         </tr>
       `;
@@ -45,11 +47,13 @@ export const salarySheetSummaryTemplate = (data: SalarySheetTemplateProps) => {
             <td class="currency">${emp.basicSalary.toFixed(2)}</td>
             <td class="currency">${emp.grossSalary.toFixed(2)}</td>
             <td class="currency">${(emp.deductions?.epfEmployee ?? 0).toFixed(2)}</td>
-            <td class="currency">${(emp.deductions?.epfEmployer ?? 0).toFixed(2)}</td>
-            <td class="currency">${(emp.deductions?.etfEmployer ?? 0).toFixed(2)}</td>
+            <td class="currency">${(emp.deductions?.losses ?? 0).toFixed(2)}</td>
+            <td class="currency">${(emp.deductions?.deposit ?? 0).toFixed(2)}</td>
             <td class="currency">${(emp.deductions?.advance ?? 0).toFixed(2)}</td>
             <td class="currency">${(emp.deductions?.noPay ?? 0).toFixed(2)}</td>
             <td class="currency">${(emp.deductions?.other ?? 0).toFixed(2)}</td>
+            <td class="currency">${(emp.deductions?.epfEmployer ?? 0).toFixed(2)}</td>
+            <td class="currency">${(emp.deductions?.etfEmployer ?? 0).toFixed(2)}</td>
             <td class="currency bold">${emp.netSalary.toFixed(2)}</td>
           </tr>
         `)
@@ -134,7 +138,7 @@ export const salarySheetSummaryTemplate = (data: SalarySheetTemplateProps) => {
           th, td { 
             border: none;
             padding: 4px 5px; 
-            font-size: 11px;
+            font-size: 10px;
           }
           th { 
             background-color: #fff; 
@@ -227,11 +231,13 @@ export const salarySheetSummaryTemplate = (data: SalarySheetTemplateProps) => {
                   <th>BASIC</th>
                   <th>GROSS</th>
                   <th>EPF(8%)</th>
-                  <th>EPF(12%)</th>
-                  <th>ETF(3%)</th>
+                  <th>LOSSES</th>
+                  <th>DEPOSIT</th>
                   <th>ADV</th>
                   <th>NO-PAY</th>
                   <th>OTHER</th>
+                  <th>EPF(12%)</th>
+                  <th>ETF(3%)</th>
                   <th>NET</th>
                 </tr>
               </thead>
@@ -242,11 +248,13 @@ export const salarySheetSummaryTemplate = (data: SalarySheetTemplateProps) => {
                   <td class="currency">${employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + emp.basicSalary, 0).toFixed(2)}</td>
                   <td class="currency">${totalGrossSalary.toFixed(2)}</td>
                   <td class="currency">${employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + (emp.deductions?.epfEmployee ?? 0), 0).toFixed(2)}</td>
-                  <td class="currency">${employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + (emp.deductions?.epfEmployer ?? 0), 0).toFixed(2)}</td>
-                  <td class="currency">${employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + (emp.deductions?.etfEmployer ?? 0), 0).toFixed(2)}</td>
+                  <td class="currency">${employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + (emp.deductions?.losses ?? 0), 0).toFixed(2)}</td>
+                  <td class="currency">${employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + (emp.deductions?.deposit ?? 0), 0).toFixed(2)}</td>
                   <td class="currency">${employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + (emp.deductions?.advance ?? 0), 0).toFixed(2)}</td>
                   <td class="currency">${employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + (emp.deductions?.noPay ?? 0), 0).toFixed(2)}</td>
                   <td class="currency">${employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + (emp.deductions?.other ?? 0), 0).toFixed(2)}</td>
+                  <td class="currency">${employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + (emp.deductions?.epfEmployer ?? 0), 0).toFixed(2)}</td>
+                  <td class="currency">${employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + (emp.deductions?.etfEmployer ?? 0), 0).toFixed(2)}</td>
                   <td class="currency bold">${totalNetSalary.toFixed(2)}</td>
                 </tr>
               </tbody>
