@@ -194,12 +194,16 @@ async function generatePDFBuffer(
     company?: any;
     logoBase64?: string;
     verificationCode?: string;
+    templateName?: string;
   }
 ): Promise<Uint8Array> {
   let browser = null;
 
   try {
-    const footerHTML = buildFooterHTML(options.company, options.logoBase64, options.verificationCode);
+    const showFooter = options.templateName !== 'payslip';
+    const footerHTML = showFooter 
+      ? buildFooterHTML(options.company, options.logoBase64, options.verificationCode)
+      : '<div></div>';
 
     let launchConfig: any = {
       headless: true,
@@ -302,18 +306,21 @@ export async function POST(req: NextRequest) {
     const verificationCode = generateVerificationCode(templateName);
     const logoBase64 = await loadCompanyLogoAsBase64(data.company?.companyLogo);
 
+    const isPayslip = templateName === 'payslip';
+
     const pdfBuffer = await generatePDFBuffer(html, {
       format: options.format || 'A4',
       orientation: options.orientation || 'portrait',
       margin: options.margin || {
         top: '10mm',
         right: '10mm',
-        bottom: '45mm',
+        bottom: isPayslip ? '10mm' : '45mm',
         left: '10mm',
       },
       company: data.company,
       logoBase64: logoBase64,
       verificationCode: verificationCode,
+      templateName: templateName,
     });
 
     const filename = options.filename || `${templateName}-${Date.now()}.pdf`;

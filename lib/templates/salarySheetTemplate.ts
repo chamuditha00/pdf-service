@@ -13,8 +13,8 @@ export interface SalarySheetEmployee {
     advance?: number;
     noPay?: number;
     other?: number;
-    depositTools?: number;
-    lossRecovery?: number;
+    losses?: number;
+    deposit?: number;
   };
 }
 
@@ -30,6 +30,8 @@ export interface SalarySheetTemplateProps {
     totalEpfEmployer: number;
     totalEtfEmployer: number;
     totalAdvance: number;
+    totalLosses: number;
+    totalDeposit: number;
     totalNoPay: number;
     totalOther: number;
     totalNetSalary: number;
@@ -50,6 +52,8 @@ export function generateSalarySheetTemplate(props: SalarySheetTemplateProps): st
     totalEpfEmployer: employees.reduce((sum, emp) => sum + (emp.deductions?.epfEmployer || 0), 0),
     totalEtfEmployer: employees.reduce((sum, emp) => sum + (emp.deductions?.etfEmployer || 0), 0),
     totalAdvance: employees.reduce((sum, emp) => sum + (emp.deductions?.advance || 0), 0),
+    totalLosses: employees.reduce((sum, emp) => sum + (emp.deductions?.losses || 0), 0),
+    totalDeposit: employees.reduce((sum, emp) => sum + (emp.deductions?.deposit || 0), 0),
     totalNoPay: employees.reduce((sum, emp) => sum + (emp.deductions?.noPay || 0), 0),
     totalOther: employees.reduce((sum, emp) => sum + (emp.deductions?.other || 0), 0),
     totalNetSalary: employees.reduce((sum, emp) => sum + (emp.netSalary || 0), 0),
@@ -169,11 +173,13 @@ export function generateSalarySheetTemplate(props: SalarySheetTemplateProps): st
                 <th class="text-right">BASIC</th>
                 <th class="text-right">GROSS</th>
                 <th class="text-right">EPF(8%)</th>
-                <th class="text-right">EPF(12%)</th>
-                <th class="text-right">ETF(3%)</th>
+                <th class="text-right">LOSSES</th>
+                <th class="text-right">DEPOSIT</th>
                 <th class="text-right">ADV</th>
                 <th class="text-right">NO-PAY</th>
                 <th class="text-right">OTHER</th>
+                <th class="text-right">EPF(12%)</th>
+                <th class="text-right">ETF(3%)</th>
                 <th class="text-right">NET</th>
               </tr>
             </thead>
@@ -186,11 +192,13 @@ export function generateSalarySheetTemplate(props: SalarySheetTemplateProps): st
                   <td class="text-right">${(emp.basicSalary || 0).toFixed(2)}</td>
                   <td class="text-right">${(emp.grossSalary || 0).toFixed(2)}</td>
                   <td class="text-right">${(emp.deductions?.epfEmployee || 0).toFixed(2)}</td>
-                  <td class="text-right">${(emp.deductions?.epfEmployer || 0).toFixed(2)}</td>
-                  <td class="text-right">${(emp.deductions?.etfEmployer || 0).toFixed(2)}</td>
+                  <td class="text-right">${(emp.deductions?.losses || 0).toFixed(2)}</td>
+                  <td class="text-right">${(emp.deductions?.deposit || 0).toFixed(2)}</td>
                   <td class="text-right">${(emp.deductions?.advance || 0).toFixed(2)}</td>
                   <td class="text-right">${(emp.deductions?.noPay || 0).toFixed(2)}</td>
                   <td class="text-right">${(emp.deductions?.other || 0).toFixed(2)}</td>
+                  <td class="text-right">${(emp.deductions?.epfEmployer || 0).toFixed(2)}</td>
+                  <td class="text-right">${(emp.deductions?.etfEmployer || 0).toFixed(2)}</td>
                   <td class="text-right">${(emp.netSalary || 0).toFixed(2)}</td>
                 </tr>
               `).join('')}
@@ -201,11 +209,13 @@ export function generateSalarySheetTemplate(props: SalarySheetTemplateProps): st
                 <td class="text-right">${totals.totalBasicSalary.toFixed(2)}</td>
                 <td class="text-right">${totals.totalGrossSalary.toFixed(2)}</td>
                 <td class="text-right">${totals.totalEpfEmp.toFixed(2)}</td>
-                <td class="text-right">${totals.totalEpfEmployer.toFixed(2)}</td>
-                <td class="text-right">${totals.totalEtfEmployer.toFixed(2)}</td>
+                <td class="text-right">${totals.totalLosses.toFixed(2)}</td>
+                <td class="text-right">${totals.totalDeposit.toFixed(2)}</td>
                 <td class="text-right">${totals.totalAdvance.toFixed(2)}</td>
                 <td class="text-right">${totals.totalNoPay.toFixed(2)}</td>
-                <td class="text-right">${totals.totalOther.toFixed(2)}</td>
+                <td class="text-right">${totals.totalOther.toFixed(2)}</td>                
+                <td class="text-right">${totals.totalEpfEmployer.toFixed(2)}</td>
+                <td class="text-right">${totals.totalEtfEmployer.toFixed(2)}</td>
                 <td class="text-right">${totals.totalNetSalary.toFixed(2)}</td>
               </tr>
             </tfoot>
