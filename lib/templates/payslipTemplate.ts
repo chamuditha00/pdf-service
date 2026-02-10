@@ -107,6 +107,16 @@ export function generatePayslipTemplate(props: PayslipTemplateProps): string {
     earningsRows = [],
   } = props;
 
+  const formatValue = (val: number | undefined | null) => {
+    if (val === undefined || val === null) return '0.00';
+    return val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  const formatNumber = (val: number | undefined | null) => {
+    if (val === undefined || val === null) return '0';
+    return val.toLocaleString('en-US');
+  };
+
   // Only include @font-face if we have the base64 string
   const fontFaceStyle = fontBase64 
     ? `@font-face {
@@ -155,11 +165,23 @@ export function generatePayslipTemplate(props: PayslipTemplateProps): string {
     }
     
     /* Header styling */
+    .header-container {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 20px;
+      min-height: 60px;
+    }
+    .header-logo {
+      position: absolute;
+      right: 0;
+      top: 0;
+    }
     .header-title {
-      font-size: 14px;
+      font-size: 16px;
       font-weight: bold;
       text-align: center;
-      padding: 5px 0;
     }
     
     /* Info section styling */
@@ -212,12 +234,13 @@ export function generatePayslipTemplate(props: PayslipTemplateProps): string {
 <body>
   <div class="payslip-container">
     
-    <!-- Header -->
-    <table style="margin-bottom: 10px;">
-      <tr>
-        <td colspan="6" class="header-title">Hegra Holdings Lanka (Pvt) Ltd</td>
-      </tr>
-    </table>
+    <!-- Header with Logo -->
+    <div class="header-container">
+      <div class="header-title">${company?.companyName || 'Hegra Holdings Lanka (Pvt) Ltd'}</div>
+      <div class="header-logo">
+        <img src="${logoBase64}" alt="Company Logo" style="max-width: 65px; max-height: 65px;">
+      </div>
+    </div>
 
     <!-- Employee Info -->
     <table style="margin-bottom: 15px;">
@@ -277,14 +300,14 @@ export function generatePayslipTemplate(props: PayslipTemplateProps): string {
             const remaining = 4 - idx;
             const colspan = (isLast && remaining > 1) ? ` colspan="${remaining}"` : '';
             return `
-              <td class="col-label" ${colspan} style="font-weight: bold; font-family: 'CrashNumberingGothic', monospace;">${h.label}: ${h.value.toFixed(0)}</td>
+              <td class="col-label" ${colspan} style="font-weight: bold; font-family: 'CrashNumberingGothic', monospace;">${h.label}: ${formatNumber(h.value)}</td>
             `;
           }).join(''));
         } else {
           leftSideRows.push(`
-            <td class="col-label" style="font-weight: bold; font-family: 'CrashNumberingGothic', monospace;"> Working Days: ${workingdays.toFixed(0)}</td>
-            <td class="col-label" style="font-weight: bold; font-family: 'CrashNumberingGothic', monospace;"> RC: ${Number(numberofRC).toFixed(0)}</td>
-            <td class="col-label" colspan="2" style="font-weight: bold; font-family: 'CrashNumberingGothic', monospace;"> DC: ${Number(numberofDC).toFixed(0)}</td>
+            <td class="col-label" style="font-weight: bold; font-family: 'CrashNumberingGothic', monospace;"> Working Days: ${formatNumber(workingdays)}</td>
+            <td class="col-label" style="font-weight: bold; font-family: 'CrashNumberingGothic', monospace;"> RC: ${formatNumber(Number(numberofRC))}</td>
+            <td class="col-label" colspan="2" style="font-weight: bold; font-family: 'CrashNumberingGothic', monospace;"> DC: ${formatNumber(Number(numberofDC))}</td>
           `);
         }
 
@@ -293,18 +316,18 @@ export function generatePayslipTemplate(props: PayslipTemplateProps): string {
           earningsRows.forEach(e => {
             leftSideRows.push(`
               <td class="col-label">${e.label}</td>
-              <td class="col-value" colspan="3" style="font-family: 'CrashNumberingGothic', monospace;">${e.value.toFixed(2)}</td>
+              <td class="col-value" colspan="3" style="font-family: 'CrashNumberingGothic', monospace;">${formatValue(e.value)}</td>
             `);
           });
         } else {
           // Default Earnings
           leftSideRows.push(`
             <td class="col-label">Basic</td>
-            <td class="col-value" colspan="3" style="font-weight: bold; font-family: 'CrashNumberingGothic', monospace;">${basicSalary.toFixed(2)}</td>
+            <td class="col-value" colspan="3" style="font-weight: bold; font-family: 'CrashNumberingGothic', monospace;">${formatValue(basicSalary)}</td>
           `);
           leftSideRows.push(`
             <td class="col-label">Bike & Fuel</td>
-            <td class="col-value" colspan="3" style="font-family: 'CrashNumberingGothic', monospace;">${bikeFuelValue.toFixed(2)}</td>
+            <td class="col-value" colspan="3" style="font-family: 'CrashNumberingGothic', monospace;">${formatValue(bikeFuelValue)}</td>
           `);
           
           // Note: dynamicAllowanceRowsHtml is special because it's already HTML
@@ -312,27 +335,27 @@ export function generatePayslipTemplate(props: PayslipTemplateProps): string {
           
           leftSideRows.push(`
             <td class="col-label">Mobile Data</td>
-            <td class="col-value" colspan="3" style="font-family: 'CrashNumberingGothic', monospace;">${mobilDataValue.toFixed(2)}</td>
+            <td class="col-value" colspan="3" style="font-family: 'CrashNumberingGothic', monospace;">${formatValue(mobilDataValue)}</td>
           `);
           leftSideRows.push(`
             <td class="col-label">Mobile Phone</td>
-            <td class="col-value" colspan="3" style="font-family: 'CrashNumberingGothic', monospace;">${mobilePhoneValue.toFixed(2)}</td>
+            <td class="col-value" colspan="3" style="font-family: 'CrashNumberingGothic', monospace;">${formatValue(mobilePhoneValue)}</td>
           `);
           leftSideRows.push(`
             <td class="col-label">80%</td>
-            <td class="col-value" colspan="3" style="font-family: 'CrashNumberingGothic', monospace;">${valueof80.toFixed(2)}</td>
+            <td class="col-value" colspan="3" style="font-family: 'CrashNumberingGothic', monospace;">${formatValue(valueof80)}</td>
           `);
           leftSideRows.push(`
             <td class="col-label">Visit</td>
-            <td class="col-value" colspan="3" style="font-family: 'CrashNumberingGothic', monospace;">${valueofVisit.toFixed(2)}</td>
+            <td class="col-value" colspan="3" style="font-family: 'CrashNumberingGothic', monospace;">${formatValue(valueofVisit)}</td>
           `);
           leftSideRows.push(`
             <td class="col-label">100%</td>
-            <td class="col-value" colspan="3" style="font-family: 'CrashNumberingGothic', monospace;">${valueof100.toFixed(2)}</td>
+            <td class="col-value" colspan="3" style="font-family: 'CrashNumberingGothic', monospace;">${formatValue(valueof100)}</td>
           `);
           leftSideRows.push(`
             <td class="col-label">Adjustment</td>
-            <td class="col-value" colspan="3" style="font-family: 'CrashNumberingGothic', monospace;">${adjustmentNetValue.toFixed(2)}</td>
+            <td class="col-value" colspan="3" style="font-family: 'CrashNumberingGothic', monospace;">${formatValue(adjustmentNetValue)}</td>
           `);
         }
 
@@ -345,7 +368,7 @@ export function generatePayslipTemplate(props: PayslipTemplateProps): string {
             if (d.label || d.value > 0) {
               rightSideRows.push(`
                 <td class="col-label">${d.label || ''}</td>
-                <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace;">${d.value ? d.value.toFixed(2) : ''}</td>
+                <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace;">${d.value ? formatValue(d.value) : ''}</td>
               `);
             }
           });
@@ -354,7 +377,7 @@ export function generatePayslipTemplate(props: PayslipTemplateProps): string {
         // Row for Total Deduction
         rightSideRows.push(`
           <td class="col-label bold">TOTAL DEDUCTION</td>
-          <td class="col-value bold" colspan="2" style="font-family: 'CrashNumberingGothic', monospace;">${totalDeduction.toFixed(2)}</td>
+          <td class="col-value bold" colspan="2" style="font-family: 'CrashNumberingGothic', monospace;">${formatValue(totalDeduction)}</td>
         `);
         // Row 5: Section Header (Employer Contribution)
         rightSideRows.push(`
@@ -363,17 +386,17 @@ export function generatePayslipTemplate(props: PayslipTemplateProps): string {
         // Row 6: EPF 12%
         rightSideRows.push(`
           <td class="col-label">EPF 12%</td>
-          <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace;">${epfEmployer.toFixed(2)}</td>
+          <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace;">${formatValue(epfEmployer)}</td>
         `);
         // Row 7: ETF 3%
         rightSideRows.push(`
           <td class="col-label">ETF 3%</td>
-          <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace;">${etfEmployer.toFixed(2)}</td>
+          <td class="col-value" colspan="2" style="font-family: 'CrashNumberingGothic', monospace;">${formatValue(etfEmployer)}</td>
         `);
         // Row 8: Total Contribution
         rightSideRows.push(`
           <td class="col-label bold">Total Contribution</td>
-          <td class="col-value bold" colspan="2" style="font-family: 'CrashNumberingGothic', monospace;">${contributionTotal.toFixed(2)}</td>
+          <td class="col-value bold" colspan="2" style="font-family: 'CrashNumberingGothic', monospace;">${formatValue(contributionTotal)}</td>
         `);
 
         // --- BALANCE ROWS (Add empty rows to shorter side) ---
@@ -430,37 +453,32 @@ export function generatePayslipTemplate(props: PayslipTemplateProps): string {
 
       <tr class="summary-row">
         <td colspan="2" class="text-center">TOTAL EARNINGS</td>
-        <td class="col-value" colspan="2" style="font-size: 12px; font-family: 'CrashNumberingGothic', monospace;">${grossSalary.toFixed(2)}</td>
+        <td class="col-value" colspan="2" style="font-size: 12px; font-family: 'CrashNumberingGothic', monospace;">${formatValue(grossSalary)}</td>
         <td style="width: 3%;"></td>
         <td colspan="2" class="text-center">NET PAY</td>
-        <td class="col-value bold" style="font-size: 13px; font-family: 'CrashNumberingGothic', monospace;">${netSalary.toFixed(2)}</td>
+        <td class="col-value bold" style="font-size: 13px; font-family: 'CrashNumberingGothic', monospace;">${formatValue(netSalary)}</td>
       </tr>
     </table>
 
     <p style="margin: 5px 0; text-align: center; font-weight: bold; font-size: 14px;">Thank You for Being a Part with Us</p>
 
-    <div class="footer" style="display: flex; justify-content: space-between; margin-top: 0; padding-top: 5px;">
-      <div style="flex: 1;">
-        <p style="margin: 5px 0; text-align: left;">${company?.companyName || 'Company Name'}${
-          company?.address
-            ? ` | ${[
-                company.address.street,
-                company.address.city,
-                company.address.state,
-                company.address.country,
-              ]
-                .filter(Boolean)
-                .join(', ')}`
-            : ''
-        }</p>
-        <p style="margin: 5px 0; text-align: left;">${company?.companyPhone ? `Tel: ${company.companyPhone}` : ''}${
-          company?.companyPhone && company?.companyEmail ? ' | ' : ''
-        }${company?.companyEmail ? `E-mail: ${company.companyEmail}` : ''}</p>
-        <p style="margin: 5px 0; text-align: left; font-size: 9px; color: #666;">${specificCode}</p>
-      </div>
-      <div style="flex: 0;">
-        <img src="${logoBase64}" alt="Company Logo" style="max-width: 50px; max-height: 50px;">
-      </div>
+    <div class="footer">
+      <p style="margin: 5px 0; text-align: left;">${company?.companyName || 'Company Name'}${
+        company?.address
+          ? ` | ${[
+              company.address.street,
+              company.address.city,
+              company.address.state,
+              company.address.country,
+            ]
+              .filter(Boolean)
+              .join(', ')}`
+          : ''
+      }</p>
+      <p style="margin: 5px 0; text-align: left;">${company?.companyPhone ? `Tel: ${company.companyPhone}` : ''}${
+        company?.companyPhone && company?.companyEmail ? ' | ' : ''
+      }${company?.companyEmail ? `E-mail: ${company.companyEmail}` : ''}</p>
+      <p style="margin: 5px 0; text-align: left; font-size: 9px; color: #666;">${specificCode}</p>
     </div>
 
   </div>
