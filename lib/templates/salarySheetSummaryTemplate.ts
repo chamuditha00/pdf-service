@@ -174,7 +174,7 @@ export const salarySheetSummaryTemplate = (data: SalarySheetTemplateProps) => {
           }
           .total-row td:first-child {
             text-align: center;
-          }
+          }x
         </style>
       </head>
       <body>
