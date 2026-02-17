@@ -27,7 +27,7 @@ import { generateDepositToolsPDFContent } from '@/lib/templates/depositToolsPDFT
 import { generateLossesRecoveryPDFContent } from '@/lib/templates/lossesRecoveryPDFTemplate';
 import { generateOtherDeductionsPDFContent } from '@/lib/templates/otherDeductionsPDFTemplate';
 import { salarySheetSummaryTemplate } from '@/lib/templates/salarySheetSummaryTemplate';
-
+import { generateLoanPDFContent } from '@/lib/templates/loanPDFTemplate';
 export type TemplateName =
   | 'payslip'
   | 'salary-sheet'
@@ -39,7 +39,25 @@ export type TemplateName =
   | 'deposit-tools'
   | 'losses-recovery'
   | 'other-deductions'
-  | 'salary-sheet-summary';
+  | 'salary-sheet-summary'
+  | 'loan-report';
+
+export interface LoanRecord {
+  id: string;
+  month: number;
+  year: number;
+  totalAmount: number;
+}
+
+export interface EmployeeDetail {
+  displayId: string;
+  employeeName: string;
+  loanAmount: number;
+  monthlyDeduction: number;
+  installmentMonths: number;
+  startMonth: number;
+  startYear: number;
+}
 
 const availableTemplates: TemplateName[] = [
   'payslip',
@@ -53,6 +71,7 @@ const availableTemplates: TemplateName[] = [
   'losses-recovery',
   'other-deductions',
   'salary-sheet-summary',
+  'loan-report',
 ];
 
 interface PDFGenerateRequest {
@@ -105,6 +124,9 @@ function generateHTMLFromTemplate(templateName: TemplateName, data: any): string
 
     case 'salary-sheet-summary':
       return salarySheetSummaryTemplate(data);
+
+    case 'loan-report':
+      return generateLoanPDFContent(data.record, data.details, data.company);
 
     default:
       throw new Error(`Unknown template: ${templateName}`);
