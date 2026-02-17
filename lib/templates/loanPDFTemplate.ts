@@ -41,16 +41,17 @@ export const generateLoanPDFContent = (
   const columns: ColumnConfig[] = [
     { label: 'EMP ID', key: 'displayId', align: 'left' },
     { label: 'NAME', key: 'employeeName', align: 'left' },
-    { label: 'AMOUNT', key: 'loanAmount', align: 'right', format: (v) => (v || 0).toLocaleString() },
-    { label: 'MONTHLY', key: 'monthlyDeduction', align: 'right', format: (v) => (v || 0).toLocaleString() },
-    { label: 'INSTALLMENTS', key: 'installmentMonths', align: 'center' },
     { 
       label: 'START MONTH', 
       key: 'startMonthDisplay', 
       align: 'center',
       format: (v) => v || 'N/A'
     },
+    { label: 'INSTALLMENTS', key: 'installmentMonths', align: 'center' },
+    { label: 'MONTHLY', key: 'monthlyDeduction', align: 'right', format: (v) => (v || 0).toLocaleString() },
+    { label: 'AMOUNT', key: 'loanAmount', align: 'right', format: (v) => (v || 0).toLocaleString() },
   ];
+  
 
   // Month array for display
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -59,12 +60,13 @@ export const generateLoanPDFContent = (
   const enrichedEmployees = details.map(emp => ({
     displayId: emp.displayId,
     employeeName: emp.employeeName,
-    loanAmount: emp.loanAmount,
-    monthlyDeduction: emp.monthlyDeduction,
-    installmentMonths: emp.installmentMonths,
     startMonth: emp.startMonth,
     startYear: emp.startYear,
     startMonthDisplay: `${months[emp.startMonth - 1]} ${emp.startYear}`,
+    installmentMonths: emp.installmentMonths,
+    monthlyDeduction: emp.monthlyDeduction,
+    loanAmount: emp.loanAmount,
+   
   }));
 
   // Use the unified template with configured columns
