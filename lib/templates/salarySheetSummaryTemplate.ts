@@ -3,6 +3,12 @@ import { SalarySheetTemplateProps, SalarySheetEmployee } from './salarySheetTemp
 export const salarySheetSummaryTemplate = (data: SalarySheetTemplateProps) => {
   const { period, employees } = data;
 
+  const formatAmount = (value: number): string =>
+    value.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
   const calculateTotalDeductions = (emp: SalarySheetEmployee): number => {
     const deductions = emp.deductions;
     return (
@@ -30,11 +36,39 @@ export const salarySheetSummaryTemplate = (data: SalarySheetTemplateProps) => {
   // Generate table rows with project headers
   const tableRows = Object.entries(groupedEmployees)
     .map(([project, projectEmployees]) => {
-      const projectNetTotal = projectEmployees.reduce((sum, emp) => sum + emp.netSalary, 0);
+      const projectName = project || 'Unassigned Project';
+      const projectTotals = projectEmployees.reduce(
+        (totals, emp) => ({
+          basicSalary: totals.basicSalary + emp.basicSalary,
+          grossSalary: totals.grossSalary + emp.grossSalary,
+          epfEmployee: totals.epfEmployee + (emp.deductions?.epfEmployee ?? 0),
+          losses: totals.losses + (emp.deductions?.losses ?? 0),
+          deposit: totals.deposit + (emp.deductions?.deposit ?? 0),
+          advance: totals.advance + (emp.deductions?.advance ?? 0),
+          noPay: totals.noPay + (emp.deductions?.noPay ?? 0),
+          other: totals.other + (emp.deductions?.other ?? 0),
+          epfEmployer: totals.epfEmployer + (emp.deductions?.epfEmployer ?? 0),
+          etfEmployer: totals.etfEmployer + (emp.deductions?.etfEmployer ?? 0),
+          netSalary: totals.netSalary + emp.netSalary,
+        }),
+        {
+          basicSalary: 0,
+          grossSalary: 0,
+          epfEmployee: 0,
+          losses: 0,
+          deposit: 0,
+          advance: 0,
+          noPay: 0,
+          other: 0,
+          epfEmployer: 0,
+          etfEmployer: 0,
+          netSalary: 0,
+        }
+      );
+
       const projectHeader = `
         <tr class="project-header">
-          <td colspan="13">${project}</td>
-          <td class="currency">${projectNetTotal.toFixed(2)}</td>
+          <td colspan="14">PROJECT: ${projectName}</td>
         </tr>
       `;
       
@@ -44,22 +78,39 @@ export const salarySheetSummaryTemplate = (data: SalarySheetTemplateProps) => {
             <td>${emp.employeeId}</td>
             <td>${emp.employeeName}</td>
             <td>${emp.jobTitle}</td>
-            <td class="currency">${emp.basicSalary.toFixed(2)}</td>
-            <td class="currency">${emp.grossSalary.toFixed(2)}</td>
-            <td class="currency">${(emp.deductions?.epfEmployee ?? 0).toFixed(2)}</td>
-            <td class="currency">${(emp.deductions?.losses ?? 0).toFixed(2)}</td>
-            <td class="currency">${(emp.deductions?.deposit ?? 0).toFixed(2)}</td>
-            <td class="currency">${(emp.deductions?.advance ?? 0).toFixed(2)}</td>
-            <td class="currency">${(emp.deductions?.noPay ?? 0).toFixed(2)}</td>
-            <td class="currency">${(emp.deductions?.other ?? 0).toFixed(2)}</td>
-            <td class="currency">${(emp.deductions?.epfEmployer ?? 0).toFixed(2)}</td>
-            <td class="currency">${(emp.deductions?.etfEmployer ?? 0).toFixed(2)}</td>
-            <td class="currency bold">${emp.netSalary.toFixed(2)}</td>
+            <td class="currency">${formatAmount(emp.basicSalary)}</td>
+            <td class="currency">${formatAmount(emp.grossSalary)}</td>
+            <td class="currency">${formatAmount(emp.deductions?.epfEmployee ?? 0)}</td>
+            <td class="currency">${formatAmount(emp.deductions?.losses ?? 0)}</td>
+            <td class="currency">${formatAmount(emp.deductions?.deposit ?? 0)}</td>
+            <td class="currency">${formatAmount(emp.deductions?.advance ?? 0)}</td>
+            <td class="currency">${formatAmount(emp.deductions?.noPay ?? 0)}</td>
+            <td class="currency">${formatAmount(emp.deductions?.other ?? 0)}</td>
+            <td class="currency">${formatAmount(emp.deductions?.epfEmployer ?? 0)}</td>
+            <td class="currency">${formatAmount(emp.deductions?.etfEmployer ?? 0)}</td>
+            <td class="currency bold">${formatAmount(emp.netSalary)}</td>
           </tr>
         `)
         .join('');
+
+      const projectTotalRow = `
+        <tr class="project-total-row">
+          <td colspan="3"></td>
+          <td class="currency">${formatAmount(projectTotals.basicSalary)}</td>
+          <td class="currency">${formatAmount(projectTotals.grossSalary)}</td>
+          <td class="currency">${formatAmount(projectTotals.epfEmployee)}</td>
+          <td class="currency">${formatAmount(projectTotals.losses)}</td>
+          <td class="currency">${formatAmount(projectTotals.deposit)}</td>
+          <td class="currency">${formatAmount(projectTotals.advance)}</td>
+          <td class="currency">${formatAmount(projectTotals.noPay)}</td>
+          <td class="currency">${formatAmount(projectTotals.other)}</td>
+          <td class="currency">${formatAmount(projectTotals.epfEmployer)}</td>
+          <td class="currency">${formatAmount(projectTotals.etfEmployer)}</td>
+          <td class="currency bold">${formatAmount(projectTotals.netSalary)}</td>
+        </tr>
+      `;
       
-      return projectHeader + employeeRows;
+      return projectHeader + employeeRows + projectTotalRow;
     })
     .join('');
 
@@ -158,7 +209,14 @@ export const salarySheetSummaryTemplate = (data: SalarySheetTemplateProps) => {
             padding: 4px 5px;
             font-size: 11px;
             border-top: 1px solid #ddd;
+            border-bottom: 1px solid #ddd;
             text-align: left;
+          }
+          .project-total-row td {
+            font-weight: bold;
+            border-top: 1px solid #000;
+            border-bottom: 1px solid #000;
+            background-color: #fafafa;
           }
           .footer { 
             text-align: center; 
@@ -215,7 +273,7 @@ export const salarySheetSummaryTemplate = (data: SalarySheetTemplateProps) => {
                 <div class="info-row">
                   <span class="label">Total</span>
                   <span class="colon">:</span>
-                  <span class="value">Rs ${totalNetSalary.toFixed(2)}</span>
+                  <span class="value">Rs ${formatAmount(totalNetSalary)}</span>
                 </div>
               </div>
             </div>
@@ -245,17 +303,17 @@ export const salarySheetSummaryTemplate = (data: SalarySheetTemplateProps) => {
                 ${tableRows}
                 <tr class="total-row">
                   <td colspan="3">TOTAL</td>
-                  <td class="currency">${employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + emp.basicSalary, 0).toFixed(2)}</td>
-                  <td class="currency">${totalGrossSalary.toFixed(2)}</td>
-                  <td class="currency">${employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + (emp.deductions?.epfEmployee ?? 0), 0).toFixed(2)}</td>
-                  <td class="currency">${employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + (emp.deductions?.losses ?? 0), 0).toFixed(2)}</td>
-                  <td class="currency">${employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + (emp.deductions?.deposit ?? 0), 0).toFixed(2)}</td>
-                  <td class="currency">${employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + (emp.deductions?.advance ?? 0), 0).toFixed(2)}</td>
-                  <td class="currency">${employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + (emp.deductions?.noPay ?? 0), 0).toFixed(2)}</td>
-                  <td class="currency">${employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + (emp.deductions?.other ?? 0), 0).toFixed(2)}</td>
-                  <td class="currency">${employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + (emp.deductions?.epfEmployer ?? 0), 0).toFixed(2)}</td>
-                  <td class="currency">${employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + (emp.deductions?.etfEmployer ?? 0), 0).toFixed(2)}</td>
-                  <td class="currency bold">${totalNetSalary.toFixed(2)}</td>
+                  <td class="currency">${formatAmount(employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + emp.basicSalary, 0))}</td>
+                  <td class="currency">${formatAmount(totalGrossSalary)}</td>
+                  <td class="currency">${formatAmount(employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + (emp.deductions?.epfEmployee ?? 0), 0))}</td>
+                  <td class="currency">${formatAmount(employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + (emp.deductions?.losses ?? 0), 0))}</td>
+                  <td class="currency">${formatAmount(employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + (emp.deductions?.deposit ?? 0), 0))}</td>
+                  <td class="currency">${formatAmount(employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + (emp.deductions?.advance ?? 0), 0))}</td>
+                  <td class="currency">${formatAmount(employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + (emp.deductions?.noPay ?? 0), 0))}</td>
+                  <td class="currency">${formatAmount(employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + (emp.deductions?.other ?? 0), 0))}</td>
+                  <td class="currency">${formatAmount(employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + (emp.deductions?.epfEmployer ?? 0), 0))}</td>
+                  <td class="currency">${formatAmount(employees.reduce((sum: number, emp: SalarySheetEmployee) => sum + (emp.deductions?.etfEmployer ?? 0), 0))}</td>
+                  <td class="currency bold">${formatAmount(totalNetSalary)}</td>
                 </tr>
               </tbody>
             </table>
