@@ -28,6 +28,7 @@ import { generateLossesRecoveryPDFContent } from '@/lib/templates/lossesRecovery
 import { generateOtherDeductionsPDFContent } from '@/lib/templates/otherDeductionsPDFTemplate';
 import { salarySheetSummaryTemplate } from '@/lib/templates/salarySheetSummaryTemplate';
 import { generateLoanPDFContent } from '@/lib/templates/loanPDFTemplate';
+import { generateSalaryHoldPDFContent } from '@/lib/templates/salaryHoldPDFTemplate';
 export type TemplateName =
   | 'payslip'
   | 'salary-sheet'
@@ -40,7 +41,8 @@ export type TemplateName =
   | 'losses-recovery'
   | 'other-deductions'
   | 'salary-sheet-summary'
-  | 'loan-report';
+  | 'loan-report'
+  | 'salary-hold';
 
 export interface LoanRecord {
   id: string;
@@ -72,6 +74,7 @@ const availableTemplates: TemplateName[] = [
   'other-deductions',
   'salary-sheet-summary',
   'loan-report',
+  'salary-hold', 
 ];
 
 interface PDFGenerateRequest {
@@ -127,6 +130,9 @@ function generateHTMLFromTemplate(templateName: TemplateName, data: any): string
 
     case 'loan-report':
       return generateLoanPDFContent(data.record, data.details, data.company);
+
+    case 'salary-hold':
+      return generateSalaryHoldPDFContent(data.record, data.details, data.company);
 
     default:
       throw new Error(`Unknown template: ${templateName}`);
