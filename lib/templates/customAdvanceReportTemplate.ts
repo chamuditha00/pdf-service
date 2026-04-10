@@ -15,6 +15,8 @@ export function generateCustomAdvanceReportHTML({
   employeeDetails: Array<{
     employeeId: string;
     employeeName: string;
+    projectName?: string;
+    departmentName?: string;
     advances: Array<{ amount: number; date: string }>;
     totalAdvance: number;
   }>;
@@ -57,9 +59,17 @@ export function generateCustomAdvanceReportHTML({
       maximumFractionDigits: 2,
     });
 
+    const projectName = emp.projectName && emp.projectName !== '-' ? emp.projectName : '';
+    const departmentName = emp.departmentName && emp.departmentName !== '-' ? emp.departmentName : '';
+    const orgDisplay = projectName || departmentName
+      ? `${projectName ? `<div style="font-size:10px;"><span style="color:#666;">Project:</span> ${projectName}</div>` : ''}
+         ${departmentName ? `<div style="font-size:10px;"><span style="color:#666;">Dept:</span> ${departmentName}</div>` : ''}`
+      : '<span style="color:#aaa;">-</span>';
+
     tableRows += `
       <tr style="border-bottom: 1px solid #e5e7eb;">
         <td style="padding: 12px; text-align: left; font-weight: 600; border-right: 1px solid #e5e7eb;">${emp.employeeName}</td>
+        <td style="padding: 12px; text-align: left; border-right: 1px solid #e5e7eb;">${orgDisplay}</td>
         <td style="padding: 12px; text-align: left;">
           ${advancesList}
         </td>
@@ -249,9 +259,10 @@ export function generateCustomAdvanceReportHTML({
           <table>
             <thead>
               <tr>
-                <th style="width: 30%;">Employee Name</th>
-                <th style="width: 40%; text-align: left;">Advances (Amount / Date)</th>
-                <th style="width: 30%; text-align: right;">Total</th>
+                <th style="width: 25%;">Employee Name</th>
+                <th style="width: 20%; text-align: left;">Project / Department</th>
+                <th style="width: 35%; text-align: left;">Advances (Amount / Date)</th>
+                <th style="width: 20%; text-align: right;">Total</th>
               </tr>
             </thead>
             <tbody>
@@ -259,7 +270,7 @@ export function generateCustomAdvanceReportHTML({
             </tbody>
             <tfoot>
               <tr>
-                <td colspan="2">TOTAL</td>
+                <td colspan="3">TOTAL</td>
                 <td>${formattedTotalAmount}</td>
               </tr>
             </tfoot>

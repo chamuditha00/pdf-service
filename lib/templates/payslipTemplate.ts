@@ -25,6 +25,7 @@ export interface PayslipTemplateProps {
   valueofRC: number;
   valueofDC: number;
   valueof100: number;
+  valueofAp:number;
   adjustmentNetValue: number;
   grossSalary: number;
   netSalary: number;
@@ -34,6 +35,7 @@ export interface PayslipTemplateProps {
   epfEmployer: number;
   etfEmployer: number;
   totalDeduction: number;
+  noPay: number;
   contributionTotal: number;
   
   // Rows data
@@ -84,6 +86,7 @@ export function generatePayslipTemplate(props: PayslipTemplateProps): string {
     bikeFuelValue,
     mobilDataValue,
     mobilePhoneValue,
+    valueofAp,
     valueof80,
     valueofVisit,
     valueofRC,
@@ -320,43 +323,61 @@ export function generatePayslipTemplate(props: PayslipTemplateProps): string {
             `);
           });
         } else {
-          // Default Earnings
-          leftSideRows.push(`
-            <td class="col-label">Basic</td>
-            <td class="col-value" colspan="3" style="font-weight: bold; font-family: 'CrashNumberingGothic', monospace;">${formatValue(basicSalary)}</td>
-          `);
-          leftSideRows.push(`
-            <td class="col-label">Bike & Fuel</td>
-            <td class="col-value" colspan="3" style="font-family: 'CrashNumberingGothic', monospace;">${formatValue(bikeFuelValue)}</td>
-          `);
-          
-          // Note: dynamicAllowanceRowsHtml is special because it's already HTML
-          // We'll handle it below by injecting it if no earningsRows
-          
-          leftSideRows.push(`
-            <td class="col-label">Mobile Data</td>
-            <td class="col-value" colspan="3" style="font-family: 'CrashNumberingGothic', monospace;">${formatValue(mobilDataValue)}</td>
-          `);
-          leftSideRows.push(`
-            <td class="col-label">Mobile Phone</td>
-            <td class="col-value" colspan="3" style="font-family: 'CrashNumberingGothic', monospace;">${formatValue(mobilePhoneValue)}</td>
-          `);
-          leftSideRows.push(`
-            <td class="col-label">80%</td>
-            <td class="col-value" colspan="3" style="font-family: 'CrashNumberingGothic', monospace;">${formatValue(valueof80)}</td>
-          `);
-          leftSideRows.push(`
-            <td class="col-label">Visit</td>
-            <td class="col-value" colspan="3" style="font-family: 'CrashNumberingGothic', monospace;">${formatValue(valueofVisit)}</td>
-          `);
-          leftSideRows.push(`
-            <td class="col-label">100%</td>
-            <td class="col-value" colspan="3" style="font-family: 'CrashNumberingGothic', monospace;">${formatValue(valueof100)}</td>
-          `);
-          leftSideRows.push(`
-            <td class="col-label">Adjustment</td>
-            <td class="col-value" colspan="3" style="font-family: 'CrashNumberingGothic', monospace;">${formatValue(adjustmentNetValue)}</td>
-          `);
+          // Default Earnings with smart row filtering
+          // Count dynamic rows injected via dynamicAllowanceRowsHtml for threshold calculation
+          const dynRowCount = dynamicAllowanceRowsHtml
+            ? (dynamicAllowanceRowsHtml.match(/<tr[^>]*>/g) || []).length
+            : 0;
+
+          // All candidate earnings rows in display order
+          const candidateEarningRows: Array<{ label: string; value: number; bold?: boolean }> = [
+            { label: 'Basic', value: basicSalary, bold: true },
+            { label: 'Bike & Fuel', value: bikeFuelValue },
+            { label: 'Mobile Data', value: mobilDataValue },
+            { label: 'Mobile Phone', value: mobilePhoneValue },
+            { label: '80%', value: valueof80 },
+            { label: 'Visit', value: valueofVisit },
+            { label: '100%', value: valueof100 },
+            {label:'Already Paid',value: valueofAp},
+            { label: 'Adjustment', value: adjustmentNetValue },
+          ];
+
+          // Step 1: Always hide Visit and Adjustment when their value is 0
+          const alwaysHideIfZero = new Set(['Visit', 'Adjustment']);
+          let filteredEarningRows = candidateEarningRows.filter(r =>
+            alwaysHideIfZero.has(r.label) ? (r.value !== 0 && r.value != null) : true
+          );
+
+          // Step 2: If total rows (static + dynamic) > 8, remove other zero-value rows
+          // (Basic is always kept) until total comes down to 8
+          const MIN_EARNINGS_ROWS = 8;
+          let earningTotal = filteredEarningRows.length + dynRowCount;
+          if (earningTotal > MIN_EARNINGS_ROWS) {
+            const excessCount = earningTotal - MIN_EARNINGS_ROWS;
+            const removableLabels = filteredEarningRows
+              .filter(r => r.label !== 'Basic' && (!r.value || r.value === 0))
+              .slice(0, excessCount)
+              .map(r => r.label);
+            const removeSet = new Set(removableLabels);
+            filteredEarningRows = filteredEarningRows.filter(r => !removeSet.has(r.label));
+          }
+
+          // Step 3: Push filtered rows
+          filteredEarningRows.forEach(r => {
+            leftSideRows.push(`
+              <td class="col-label">${r.label}</td>
+              <td class="col-value" colspan="3" style="${r.bold ? 'font-weight: bold; ' : ''}font-family: 'CrashNumberingGothic', monospace;">${formatValue(r.value)}</td>
+            `);
+          });
+
+          // Step 4: Pad with empty rows if total is still below the minimum of 8
+          earningTotal = filteredEarningRows.length + dynRowCount;
+          if (earningTotal < MIN_EARNINGS_ROWS) {
+            const emptyCount = MIN_EARNINGS_ROWS - earningTotal;
+            for (let i = 0; i < emptyCount; i++) {
+              leftSideRows.push(`<td colspan="4"></td>`);
+            }
+          }
         }
 
         // --- PREPARE RIGHT SIDE (DEDUCTIONS) ---
