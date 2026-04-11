@@ -26,6 +26,7 @@ export interface PayslipTemplateProps {
   valueofDC: number;
   valueof100: number;
   valueofAp:number;
+  valueofSaturdays: number;
   adjustmentNetValue: number;
   grossSalary: number;
   netSalary: number;
@@ -87,6 +88,7 @@ export function generatePayslipTemplate(props: PayslipTemplateProps): string {
     mobilDataValue,
     mobilePhoneValue,
     valueofAp,
+    valueofSaturdays,
     valueof80,
     valueofVisit,
     valueofRC,
@@ -338,6 +340,7 @@ export function generatePayslipTemplate(props: PayslipTemplateProps): string {
             { label: '80%', value: valueof80 },
             { label: 'Visit', value: valueofVisit },
             { label: '100%', value: valueof100 },
+            { label: 'Saturdays', value: valueofSaturdays },
             {label:'Already Paid',value: valueofAp},
             { label: 'Adjustment', value: adjustmentNetValue },
           ];
