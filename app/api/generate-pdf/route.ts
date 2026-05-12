@@ -30,6 +30,7 @@ import { salarySheetSummaryTemplate } from '@/lib/templates/salarySheetSummaryTe
 import { generateLoanPDFContent } from '@/lib/templates/loanPDFTemplate';
 import { generateSalaryHoldPDFContent } from '@/lib/templates/salaryHoldPDFTemplate';
 import { generateEPFETFPDFContent } from '@/lib/templates/epfEtfPDFTemplate';
+import { generateApitPDFContent } from '@/lib/templates/apitPDFTemplate';
 import { request } from 'https';
 export type TemplateName =
   | 'payslip'
@@ -45,7 +46,8 @@ export type TemplateName =
   | 'salary-sheet-summary'
   | 'loan-report'
   | 'salary-hold'
-  | 'epf-etf-request';
+  | 'epf-etf-request'
+  | 'apit-summary';
 
 export interface LoanRecord {
   id: string;
@@ -78,7 +80,8 @@ const availableTemplates: TemplateName[] = [
   'salary-sheet-summary',
   'loan-report',
   'salary-hold', 
-  'epf-etf-request'
+  'epf-etf-request',
+  'apit-summary',
 ];
 
 interface PDFGenerateRequest {
@@ -140,6 +143,9 @@ function generateHTMLFromTemplate(templateName: TemplateName, data: any): string
 
     case 'epf-etf-request':
       return generateEPFETFPDFContent(data.record);
+
+    case 'apit-summary':
+      return generateApitPDFContent(data);
 
     default:
       throw new Error(`Unknown template: ${templateName}`);
