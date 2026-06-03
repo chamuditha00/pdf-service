@@ -30,6 +30,7 @@ import { salarySheetSummaryTemplate } from '@/lib/templates/salarySheetSummaryTe
 import { generateLoanPDFContent } from '@/lib/templates/loanPDFTemplate';
 import { generateSalaryHoldPDFContent } from '@/lib/templates/salaryHoldPDFTemplate';
 import { generateEPFETFPDFContent } from '@/lib/templates/epfEtfPDFTemplate';
+import { generateEmployeeReportTemplate } from '@/lib/templates/employeeReportTemplate';
 import { generateApitPDFContent } from '@/lib/templates/apitPDFTemplate';
 import { request } from 'https';
 export type TemplateName =
@@ -46,6 +47,8 @@ export type TemplateName =
   | 'salary-sheet-summary'
   | 'loan-report'
   | 'salary-hold'
+  | 'epf-etf-request'
+  | 'employee-report';
   | 'epf-etf-request'
   | 'apit-summary';
 
@@ -79,6 +82,9 @@ const availableTemplates: TemplateName[] = [
   'other-deductions',
   'salary-sheet-summary',
   'loan-report',
+  'salary-hold',
+  'epf-etf-request',
+  'employee-report'
   'salary-hold', 
   'epf-etf-request',
   'apit-summary',
@@ -144,6 +150,9 @@ function generateHTMLFromTemplate(templateName: TemplateName, data: any): string
     case 'epf-etf-request':
       return generateEPFETFPDFContent(data.record);
 
+    case 'employee-report':
+      return generateEmployeeReportTemplate(data);
+
     case 'apit-summary':
       return generateApitPDFContent(data);
 
@@ -178,7 +187,7 @@ async function loadCompanyLogoAsBase64(logoPath?: string): Promise<string> {
       return '';
     }
   } catch (error) {
-    console.error('Error loading company logo:', error);
+  //  console.error('Error loading company logo:', error);
     return '';
   }
 }
@@ -321,6 +330,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body: PDFGenerateRequest = await req.json();
+   // console.log('Received payload from external:', JSON.stringify(body, null, 2));
     const { templateName, data, options = {} } = body;
 
     if (!templateName || !data) {
@@ -340,7 +350,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log(`Generating PDF: ${templateName}`);
+    //console.log(`Generating PDF: ${templateName}`);
 
     const html = generateHTMLFromTemplate(templateName, data);
     const verificationCode = generateVerificationCode(templateName);
@@ -382,7 +392,7 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('PDF generation error:', error);
+   // console.error('PDF generation error:', error);
 
     return NextResponse.json(
       {

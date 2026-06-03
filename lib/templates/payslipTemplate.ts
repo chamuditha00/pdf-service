@@ -327,6 +327,7 @@ export function generatePayslipTemplate(props: PayslipTemplateProps): string {
             `);
           });
         } else {
+          console.log("bikeFuelValue", bikeFuelValue);
           // Default Earnings with smart row filtering
           // Count dynamic rows injected via dynamicAllowanceRowsHtml for threshold calculation
           const dynRowCount = dynamicAllowanceRowsHtml
@@ -344,7 +345,7 @@ export function generatePayslipTemplate(props: PayslipTemplateProps): string {
             { label: '100%', value: valueof100 },
             { label: 'Saturdays', value: valueofSaturdays },
             {label:'Already Paid',value: valueofAp},
-            { label: 'Attendance Incentive', value: attendanceIncentive },
+           { label: 'Attendance Incentive', value: attendanceIncentive },
             { label: 'Adjustment', value: adjustmentNetValue },
           ];
 
