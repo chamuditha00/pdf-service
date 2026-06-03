@@ -154,7 +154,6 @@ export function generateEmployeeReportTemplate(props: EmployeeReportTemplateProp
                 <th class="text-center">#</th>
                 <th>EMP ID</th>
                 <th>NAME</th>
-                <th>COMMON NAME</th>
                 <th>DEPARTMENT</th>
                 <th>PROJECT</th>
                 <th class="text-center">STATUS</th>
@@ -169,7 +168,6 @@ export function generateEmployeeReportTemplate(props: EmployeeReportTemplateProp
                 <tr>
                   <td class="text-center">${emp.index ?? i + 1}</td>
                   <td class="emp-id">${escapeHtml(emp.employeeId || 'N/A')}</td>
-                  <td>${escapeHtml(emp.name || 'N/A')}</td>
                   <td>${escapeHtml(emp.commonName || '-')}</td>
                   <td>${escapeHtml(emp.department || '-')}</td>
                   <td>${escapeHtml(emp.project || '-')}</td>
