@@ -48,8 +48,7 @@ export type TemplateName =
   | 'loan-report'
   | 'salary-hold'
   | 'epf-etf-request'
-  | 'employee-report';
-  | 'epf-etf-request'
+  | 'employee-report'
   | 'apit-summary';
 
 export interface LoanRecord {
@@ -84,9 +83,7 @@ const availableTemplates: TemplateName[] = [
   'loan-report',
   'salary-hold',
   'epf-etf-request',
-  'employee-report'
-  'salary-hold', 
-  'epf-etf-request',
+  'employee-report',
   'apit-summary',
 ];
 
