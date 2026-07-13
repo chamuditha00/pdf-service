@@ -45,6 +45,7 @@ export interface EmployeeCvTemplateProps {
     companyEmail?: string;
     companyPhone?: string;
   };
+  logoBase64?: string;
   generatedDate: string;
   employee: {
     employeeId?: string;
@@ -144,8 +145,9 @@ function infoGrid(items: Array<{ label: string; value?: string }>): string {
 }
 
 export function generateEmployeeCvTemplate(props: EmployeeCvTemplateProps): string {
-  const { company, generatedDate, employee, sections = {} } = props;
+  const { company, logoBase64, generatedDate, employee, sections = {} } = props;
   const companyName = company?.companyName || '';
+  const logoImg = logoBase64 ? `<img src="${logoBase64}" alt="Company Logo" class="company-logo" />` : '';
 
   const sectionsHtml: string[] = [];
 
@@ -391,6 +393,12 @@ export function generateEmployeeCvTemplate(props: EmployeeCvTemplateProps): stri
             border-bottom: 2px solid #000;
             padding-bottom: 10px;
           }
+          .company-logo {
+            max-height: 48px;
+            max-width: 160px;
+            object-fit: contain;
+            margin-bottom: 6px;
+          }
           .company-name {
             font-size: 12px;
             font-weight: bold;
@@ -515,6 +523,7 @@ export function generateEmployeeCvTemplate(props: EmployeeCvTemplateProps): stri
       </head>
       <body>
         <div class="header">
+          ${logoImg}
           ${companyName ? `<div class="company-name">${escapeHtml(companyName)}</div>` : ''}
           <div class="title">${escapeHtml(employee.fullName || employee.nameWithInitial)}</div>
           <div class="subtitle">${escapeHtml(employee.nameWithInitial)}</div>
