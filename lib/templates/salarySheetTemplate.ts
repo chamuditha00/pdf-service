@@ -1,13 +1,24 @@
+/** One label/value pair as it appears on the payslip. */
+export interface SalarySheetItem {
+  label: string;
+  value: number;
+}
+
 export interface SalarySheetEmployee {
   employeeId: string;
   projectDepartment: string;
   employeeName: string;
   jobTitle: string;
   basicSalary: number;
+  /** Payslip header row - counts such as Working Days / RC / DC. */
+  headerItems?: SalarySheetItem[];
+  /** Payslip earnings rows - Bike & Fuel, Mobile Data, 100%, ... (Basic excluded). */
+  earningItems?: SalarySheetItem[];
+  /** @deprecated Superseded by headerItems/earningItems; still honoured as a fallback. */
   days?: number;
-  numberOfDC?: number;
-  numberOfRC?: number;
-  bikeFuel?: number;
+  /** @deprecated */ numberOfDC?: number;
+  /** @deprecated */ numberOfRC?: number;
+  /** @deprecated */ bikeFuel?: number;
   grossSalary: number;
   netSalary: number;
   deductions?: {
@@ -29,10 +40,6 @@ export interface SalarySheetTemplateProps {
   employees: SalarySheetEmployee[];
   totals?: {
     totalBasicSalary: number;
-    totalDays?: number;
-    totalDC?: number;
-    totalRC?: number;
-    totalBikeFuel?: number;
     totalGrossSalary: number;
     totalEpfEmp: number;
     totalEpfEmployer: number;
@@ -46,6 +53,16 @@ export interface SalarySheetTemplateProps {
   };
   company?: {
     companyName?: string;
+  };
+  /**
+   * Column plan derived from the job roles in play. Establishes which payslip
+   * columns exist and in what order, so the sheet keeps a stable shape even for
+   * employees whose own rows are missing a field. Labels found on employees but
+   * absent here are appended rather than dropped.
+   */
+  columns?: {
+    headerLabels?: string[];
+    earningLabels?: string[];
   };
 }
 
@@ -66,10 +83,6 @@ export function generateSalarySheetTemplate(props: SalarySheetTemplateProps): st
 
   const totals = {
     totalBasicSalary: resolve(given.totalBasicSalary, sum((e) => e.basicSalary)),
-    totalDays: resolve(given.totalDays, sum((e) => e.days)),
-    totalDC: resolve(given.totalDC, sum((e) => e.numberOfDC)),
-    totalRC: resolve(given.totalRC, sum((e) => e.numberOfRC)),
-    totalBikeFuel: resolve(given.totalBikeFuel, sum((e) => e.bikeFuel)),
     totalGrossSalary: resolve(given.totalGrossSalary, sum((e) => e.grossSalary)),
     totalEpfEmp: resolve(given.totalEpfEmp, sum((e) => e.deductions?.epfEmployee)),
     totalEpfEmployer: resolve(given.totalEpfEmployer, sum((e) => e.deductions?.epfEmployer)),
@@ -81,6 +94,97 @@ export function generateSalarySheetTemplate(props: SalarySheetTemplateProps): st
     totalOther: resolve(given.totalOther, sum((e) => e.deductions?.other)),
     totalNetSalary: resolve(given.totalNetSalary, sum((e) => e.netSalary)),
   };
+
+  // ── Dynamic payslip columns ────────────────────────────────────────────────
+  //
+  // Every job role designs its own payslip, so the columns between BASIC and
+  // GROSS are the union of the labels actually present across these employees,
+  // in first-seen order. An employee whose role lacks a column simply prints 0
+  // there.
+
+  // Employees sent before headerItems/earningItems existed still carry the four
+  // flat fields; fold those into the item shape so there is one rendering path.
+  const rows = employees.map((emp) => {
+    const legacy =
+      emp.days !== undefined ||
+      emp.numberOfDC !== undefined ||
+      emp.numberOfRC !== undefined ||
+      emp.bikeFuel !== undefined;
+
+    return {
+      emp,
+      headerItems:
+        emp.headerItems?.length
+          ? emp.headerItems
+          : legacy
+            ? [
+                { label: 'Working Days', value: emp.days || 0 },
+                { label: 'RC', value: emp.numberOfRC || 0 },
+                { label: 'DC', value: emp.numberOfDC || 0 },
+              ]
+            : [],
+      earningItems:
+        emp.earningItems?.length
+          ? emp.earningItems
+          : legacy
+            ? [{ label: 'Bike & Fuel', value: emp.bikeFuel || 0 }]
+            : [],
+    };
+  });
+
+  const collectLabels = (
+    pick: (r: (typeof rows)[number]) => SalarySheetItem[],
+    seedLabels: string[] = []
+  ) => {
+    const order: string[] = [];
+    const seen = new Set<string>();
+    seedLabels.forEach((raw) => {
+      const label = String(raw ?? '').trim();
+      if (!label || seen.has(label.toLowerCase())) return;
+      seen.add(label.toLowerCase());
+      order.push(label);
+    });
+    rows.forEach((row) =>
+      pick(row).forEach((item) => {
+        const label = String(item?.label ?? '').trim();
+        if (!label) return;
+        const key = label.toLowerCase();
+        if (!seen.has(key)) {
+          seen.add(key);
+          order.push(label);
+        }
+      })
+    );
+    return order;
+  };
+
+  const headerLabels = collectLabels((r) => r.headerItems, props.columns?.headerLabels);
+  // Basic already has its own column - don't repeat it.
+  const earningLabels = collectLabels(
+    (r) => r.earningItems,
+    props.columns?.earningLabels
+  ).filter((label) => !/^basic(\s+salary)?$/i.test(label));
+
+  const itemValue = (items: SalarySheetItem[], label: string) => {
+    const hit = items.find(
+      (i) => String(i?.label ?? '').trim().toLowerCase() === label.toLowerCase()
+    );
+    const val = Number(hit?.value);
+    return isFinite(val) ? val : 0;
+  };
+
+  const columnTotal = (
+    pick: (r: (typeof rows)[number]) => SalarySheetItem[],
+    label: string
+  ) => rows.reduce((acc, row) => acc + itemValue(pick(row), label), 0);
+
+  // Wider tables need smaller type to stay inside one landscape page.
+  const columnCount = 12 + headerLabels.length + earningLabels.length;
+  const sizeClass =
+    columnCount >= 30 ? 'size-xxs' : columnCount >= 23 ? 'size-xs' : columnCount >= 19 ? 'size-sm' : '';
+
+  const escapeHtml = (value: string) =>
+    value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
   return `
     <html>
@@ -165,6 +269,24 @@ export function generateSalarySheetTemplate(props: SalarySheetTemplateProps): st
             font-size: 7px;
             color: #666;
           }
+          /* Wide sheets shrink so they still fit one landscape page. */
+          table.size-sm th { font-size: 8px; padding: 3px 4px; }
+          table.size-sm td { font-size: 7px; padding: 2px 4px; }
+          table.size-xs th { font-size: 7px; padding: 3px 2px; }
+          table.size-xs td { font-size: 6px; padding: 2px 2px; }
+          table.size-xxs th { font-size: 6px; padding: 2px 1px; }
+          table.size-xxs td { font-size: 5px; padding: 1px 1px; }
+          /* Figures must never break across lines - only the text columns wrap. */
+          td {
+            white-space: nowrap;
+          }
+          th {
+            white-space: normal;
+          }
+          td.wrap {
+            white-space: normal;
+            overflow-wrap: break-word;
+          }
           .text-right {
             text-align: right;
           }
@@ -201,17 +323,15 @@ export function generateSalarySheetTemplate(props: SalarySheetTemplateProps): st
               Period: ${period} | Type: ${sheetType} | Sheet: ${sheetName} | Total Employees: ${employees.length}
             </div>
           </div>
-          <table>
+          <table class="${sizeClass}">
             <thead>
               <tr>
                 <th>EMP ID</th>
                 <th>NAME</th>
                 <th>JOB ROLE</th>
                 <th class="text-right">BASIC</th>
-                <th class="text-center">DAYS</th>
-                <th class="text-center">DC</th>
-                <th class="text-center">RC</th>
-                <th class="text-right">PAYSHEET<br><span class="th-sub">(Bike &amp; Fuel)</span></th>
+                ${headerLabels.map((label) => `<th class="text-center">${escapeHtml(label.toUpperCase())}</th>`).join('')}
+                ${earningLabels.map((label) => `<th class="text-right">${escapeHtml(label.toUpperCase())}</th>`).join('')}
                 <th class="text-right">GROSS</th>
                 <th class="text-right">EPF(8%)</th>
                 <th class="text-right">LOSSES</th>
@@ -225,16 +345,14 @@ export function generateSalarySheetTemplate(props: SalarySheetTemplateProps): st
               </tr>
             </thead>
             <tbody>
-              ${employees.map(emp => `
+              ${rows.map(({ emp, headerItems, earningItems }) => `
                 <tr>
                   <td class="emp-id">${emp.employeeId || 'N/A'}</td>
-                  <td>${emp.employeeName || 'N/A'}</td>
-                  <td>${emp.jobTitle || 'N/A'}</td>
+                  <td class="wrap">${emp.employeeName || 'N/A'}</td>
+                  <td class="wrap">${emp.jobTitle || 'N/A'}</td>
                   <td class="text-right">${(emp.basicSalary || 0).toFixed(2)}</td>
-                  <td class="text-center">${formatCount(emp.days || 0)}</td>
-                  <td class="text-center">${formatCount(emp.numberOfDC || 0)}</td>
-                  <td class="text-center">${formatCount(emp.numberOfRC || 0)}</td>
-                  <td class="text-right">${(emp.bikeFuel || 0).toFixed(2)}</td>
+                  ${headerLabels.map((label) => `<td class="text-center">${formatCount(itemValue(headerItems, label))}</td>`).join('')}
+                  ${earningLabels.map((label) => `<td class="text-right">${itemValue(earningItems, label).toFixed(2)}</td>`).join('')}
                   <td class="text-right">${(emp.grossSalary || 0).toFixed(2)}</td>
                   <td class="text-right">${(emp.deductions?.epfEmployee || 0).toFixed(2)}</td>
                   <td class="text-right">${(emp.deductions?.losses || 0).toFixed(2)}</td>
@@ -252,10 +370,8 @@ export function generateSalarySheetTemplate(props: SalarySheetTemplateProps): st
               <tr>
                 <td colspan="3" class="text-center">TOTAL</td>
                 <td class="text-right">${totals.totalBasicSalary.toFixed(2)}</td>
-                <td class="text-center">${formatCount(totals.totalDays)}</td>
-                <td class="text-center">${formatCount(totals.totalDC)}</td>
-                <td class="text-center">${formatCount(totals.totalRC)}</td>
-                <td class="text-right">${totals.totalBikeFuel.toFixed(2)}</td>
+                ${headerLabels.map((label) => `<td class="text-center">${formatCount(columnTotal((r) => r.headerItems, label))}</td>`).join('')}
+                ${earningLabels.map((label) => `<td class="text-right">${columnTotal((r) => r.earningItems, label).toFixed(2)}</td>`).join('')}
                 <td class="text-right">${totals.totalGrossSalary.toFixed(2)}</td>
                 <td class="text-right">${totals.totalEpfEmp.toFixed(2)}</td>
                 <td class="text-right">${totals.totalLosses.toFixed(2)}</td>
