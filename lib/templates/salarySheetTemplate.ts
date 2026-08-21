@@ -4,6 +4,10 @@ export interface SalarySheetEmployee {
   employeeName: string;
   jobTitle: string;
   basicSalary: number;
+  days?: number;
+  numberOfDC?: number;
+  numberOfRC?: number;
+  bikeFuel?: number;
   grossSalary: number;
   netSalary: number;
   deductions?: {
@@ -25,6 +29,10 @@ export interface SalarySheetTemplateProps {
   employees: SalarySheetEmployee[];
   totals?: {
     totalBasicSalary: number;
+    totalDays?: number;
+    totalDC?: number;
+    totalRC?: number;
+    totalBikeFuel?: number;
     totalGrossSalary: number;
     totalEpfEmp: number;
     totalEpfEmployer: number;
@@ -44,19 +52,34 @@ export interface SalarySheetTemplateProps {
 export function generateSalarySheetTemplate(props: SalarySheetTemplateProps): string {
   const { period, sheetType, sheetName, employees } = props;
 
-  // Calculate totals if not provided
-  const totals = props.totals || {
-    totalBasicSalary: employees.reduce((sum, emp) => sum + (emp.basicSalary || 0), 0),
-    totalGrossSalary: employees.reduce((sum, emp) => sum + (emp.grossSalary || 0), 0),
-    totalEpfEmp: employees.reduce((sum, emp) => sum + (emp.deductions?.epfEmployee || 0), 0),
-    totalEpfEmployer: employees.reduce((sum, emp) => sum + (emp.deductions?.epfEmployer || 0), 0),
-    totalEtfEmployer: employees.reduce((sum, emp) => sum + (emp.deductions?.etfEmployer || 0), 0),
-    totalAdvance: employees.reduce((sum, emp) => sum + (emp.deductions?.advance || 0), 0),
-    totalLosses: employees.reduce((sum, emp) => sum + (emp.deductions?.losses || 0), 0),
-    totalDeposit: employees.reduce((sum, emp) => sum + (emp.deductions?.deposit || 0), 0),
-    totalNoPay: employees.reduce((sum, emp) => sum + (emp.deductions?.noPay || 0), 0),
-    totalOther: employees.reduce((sum, emp) => sum + (emp.deductions?.other || 0), 0),
-    totalNetSalary: employees.reduce((sum, emp) => sum + (emp.netSalary || 0), 0),
+  // Counts (days / DC / RC) print without forced decimals; money always gets 2dp.
+  const formatCount = (val: number) =>
+    Number.isInteger(val) ? String(val) : val.toFixed(2);
+
+  // Each total falls back to a column sum when the caller omits it, so a caller
+  // that predates a column still renders instead of throwing on undefined.
+  const sum = (pick: (emp: SalarySheetEmployee) => number | undefined) =>
+    employees.reduce((acc, emp) => acc + (pick(emp) || 0), 0);
+  const given: Partial<NonNullable<SalarySheetTemplateProps['totals']>> = props.totals || {};
+  const resolve = (val: number | undefined, fallback: number) =>
+    typeof val === 'number' && isFinite(val) ? val : fallback;
+
+  const totals = {
+    totalBasicSalary: resolve(given.totalBasicSalary, sum((e) => e.basicSalary)),
+    totalDays: resolve(given.totalDays, sum((e) => e.days)),
+    totalDC: resolve(given.totalDC, sum((e) => e.numberOfDC)),
+    totalRC: resolve(given.totalRC, sum((e) => e.numberOfRC)),
+    totalBikeFuel: resolve(given.totalBikeFuel, sum((e) => e.bikeFuel)),
+    totalGrossSalary: resolve(given.totalGrossSalary, sum((e) => e.grossSalary)),
+    totalEpfEmp: resolve(given.totalEpfEmp, sum((e) => e.deductions?.epfEmployee)),
+    totalEpfEmployer: resolve(given.totalEpfEmployer, sum((e) => e.deductions?.epfEmployer)),
+    totalEtfEmployer: resolve(given.totalEtfEmployer, sum((e) => e.deductions?.etfEmployer)),
+    totalAdvance: resolve(given.totalAdvance, sum((e) => e.deductions?.advance)),
+    totalLosses: resolve(given.totalLosses, sum((e) => e.deductions?.losses)),
+    totalDeposit: resolve(given.totalDeposit, sum((e) => e.deductions?.deposit)),
+    totalNoPay: resolve(given.totalNoPay, sum((e) => e.deductions?.noPay)),
+    totalOther: resolve(given.totalOther, sum((e) => e.deductions?.other)),
+    totalNetSalary: resolve(given.totalNetSalary, sum((e) => e.netSalary)),
   };
 
   return `
@@ -137,6 +160,11 @@ export function generateSalarySheetTemplate(props: SalarySheetTemplateProps): st
             padding: 6px 8px;
             border: none;
           }
+          .th-sub {
+            font-weight: normal;
+            font-size: 7px;
+            color: #666;
+          }
           .text-right {
             text-align: right;
           }
@@ -180,6 +208,10 @@ export function generateSalarySheetTemplate(props: SalarySheetTemplateProps): st
                 <th>NAME</th>
                 <th>JOB ROLE</th>
                 <th class="text-right">BASIC</th>
+                <th class="text-center">DAYS</th>
+                <th class="text-center">DC</th>
+                <th class="text-center">RC</th>
+                <th class="text-right">PAYSHEET<br><span class="th-sub">(Bike &amp; Fuel)</span></th>
                 <th class="text-right">GROSS</th>
                 <th class="text-right">EPF(8%)</th>
                 <th class="text-right">LOSSES</th>
@@ -199,6 +231,10 @@ export function generateSalarySheetTemplate(props: SalarySheetTemplateProps): st
                   <td>${emp.employeeName || 'N/A'}</td>
                   <td>${emp.jobTitle || 'N/A'}</td>
                   <td class="text-right">${(emp.basicSalary || 0).toFixed(2)}</td>
+                  <td class="text-center">${formatCount(emp.days || 0)}</td>
+                  <td class="text-center">${formatCount(emp.numberOfDC || 0)}</td>
+                  <td class="text-center">${formatCount(emp.numberOfRC || 0)}</td>
+                  <td class="text-right">${(emp.bikeFuel || 0).toFixed(2)}</td>
                   <td class="text-right">${(emp.grossSalary || 0).toFixed(2)}</td>
                   <td class="text-right">${(emp.deductions?.epfEmployee || 0).toFixed(2)}</td>
                   <td class="text-right">${(emp.deductions?.losses || 0).toFixed(2)}</td>
@@ -216,6 +252,10 @@ export function generateSalarySheetTemplate(props: SalarySheetTemplateProps): st
               <tr>
                 <td colspan="3" class="text-center">TOTAL</td>
                 <td class="text-right">${totals.totalBasicSalary.toFixed(2)}</td>
+                <td class="text-center">${formatCount(totals.totalDays)}</td>
+                <td class="text-center">${formatCount(totals.totalDC)}</td>
+                <td class="text-center">${formatCount(totals.totalRC)}</td>
+                <td class="text-right">${totals.totalBikeFuel.toFixed(2)}</td>
                 <td class="text-right">${totals.totalGrossSalary.toFixed(2)}</td>
                 <td class="text-right">${totals.totalEpfEmp.toFixed(2)}</td>
                 <td class="text-right">${totals.totalLosses.toFixed(2)}</td>
