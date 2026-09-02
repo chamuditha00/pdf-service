@@ -178,8 +178,27 @@ export function generateSalarySheetTemplate(props: SalarySheetTemplateProps): st
     label: string
   ) => rows.reduce((acc, row) => acc + itemValue(pick(row), label), 0);
 
+  // Working Days gets pulled out of the generic header columns to sit ahead of
+  // BASIC, and RC/DC combine into one "Work Done" column placed just before
+  // GROSS - both are removed from the generic list so they don't also render
+  // in their usual spot between BASIC and the earning columns.
+  const isLabel = (label: string, target: string) => label.trim().toLowerCase() === target;
+  const hasWorkingDays = headerLabels.some((l) => isLabel(l, 'working days'));
+  const hasWorkDone = headerLabels.some((l) => isLabel(l, 'rc') || isLabel(l, 'dc'));
+  const otherHeaderLabels = headerLabels.filter(
+    (l) => !isLabel(l, 'working days') && !isLabel(l, 'rc') && !isLabel(l, 'dc')
+  );
+  const workDoneValue = (items: SalarySheetItem[]) => itemValue(items, 'RC') + itemValue(items, 'DC');
+  const workDoneTotal = () =>
+    columnTotal((r) => r.headerItems, 'RC') + columnTotal((r) => r.headerItems, 'DC');
+
   // Wider tables need smaller type to stay inside one landscape page.
-  const columnCount = 12 + headerLabels.length + earningLabels.length;
+  const columnCount =
+    12 +
+    (hasWorkingDays ? 1 : 0) +
+    otherHeaderLabels.length +
+    (hasWorkDone ? 1 : 0) +
+    earningLabels.length;
   const sizeClass =
     columnCount >= 30 ? 'size-xxs' : columnCount >= 23 ? 'size-xs' : columnCount >= 19 ? 'size-sm' : '';
 
@@ -329,9 +348,11 @@ export function generateSalarySheetTemplate(props: SalarySheetTemplateProps): st
                 <th>EMP ID</th>
                 <th>NAME</th>
                 <th>JOB ROLE</th>
+                ${hasWorkingDays ? '<th class="text-center">WORKING DAYS</th>' : ''}
                 <th class="text-right">BASIC</th>
-                ${headerLabels.map((label) => `<th class="text-center">${escapeHtml(label.toUpperCase())}</th>`).join('')}
+                ${otherHeaderLabels.map((label) => `<th class="text-center">${escapeHtml(label.toUpperCase())}</th>`).join('')}
                 ${earningLabels.map((label) => `<th class="text-right">${escapeHtml(label.toUpperCase())}</th>`).join('')}
+                ${hasWorkDone ? '<th class="text-center">WORK DONE</th>' : ''}
                 <th class="text-right">GROSS</th>
                 <th class="text-right">EPF(8%)</th>
                 <th class="text-right">LOSSES</th>
@@ -350,9 +371,11 @@ export function generateSalarySheetTemplate(props: SalarySheetTemplateProps): st
                   <td class="emp-id">${emp.employeeId || 'N/A'}</td>
                   <td class="wrap">${emp.employeeName || 'N/A'}</td>
                   <td class="wrap">${emp.jobTitle || 'N/A'}</td>
+                  ${hasWorkingDays ? `<td class="text-center">${formatCount(itemValue(headerItems, 'Working Days'))}</td>` : ''}
                   <td class="text-right">${(emp.basicSalary || 0).toFixed(2)}</td>
-                  ${headerLabels.map((label) => `<td class="text-center">${formatCount(itemValue(headerItems, label))}</td>`).join('')}
+                  ${otherHeaderLabels.map((label) => `<td class="text-center">${formatCount(itemValue(headerItems, label))}</td>`).join('')}
                   ${earningLabels.map((label) => `<td class="text-right">${itemValue(earningItems, label).toFixed(2)}</td>`).join('')}
+                  ${hasWorkDone ? `<td class="text-center">${formatCount(workDoneValue(headerItems))}</td>` : ''}
                   <td class="text-right">${(emp.grossSalary || 0).toFixed(2)}</td>
                   <td class="text-right">${(emp.deductions?.epfEmployee || 0).toFixed(2)}</td>
                   <td class="text-right">${(emp.deductions?.losses || 0).toFixed(2)}</td>
@@ -369,9 +392,11 @@ export function generateSalarySheetTemplate(props: SalarySheetTemplateProps): st
             <tfoot>
               <tr>
                 <td colspan="3" class="text-center">TOTAL</td>
+                ${hasWorkingDays ? `<td class="text-center">${formatCount(columnTotal((r) => r.headerItems, 'Working Days'))}</td>` : ''}
                 <td class="text-right">${totals.totalBasicSalary.toFixed(2)}</td>
-                ${headerLabels.map((label) => `<td class="text-center">${formatCount(columnTotal((r) => r.headerItems, label))}</td>`).join('')}
+                ${otherHeaderLabels.map((label) => `<td class="text-center">${formatCount(columnTotal((r) => r.headerItems, label))}</td>`).join('')}
                 ${earningLabels.map((label) => `<td class="text-right">${columnTotal((r) => r.earningItems, label).toFixed(2)}</td>`).join('')}
+                ${hasWorkDone ? `<td class="text-center">${formatCount(workDoneTotal())}</td>` : ''}
                 <td class="text-right">${totals.totalGrossSalary.toFixed(2)}</td>
                 <td class="text-right">${totals.totalEpfEmp.toFixed(2)}</td>
                 <td class="text-right">${totals.totalLosses.toFixed(2)}</td>
