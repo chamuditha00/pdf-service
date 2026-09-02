@@ -192,6 +192,12 @@ export function generateSalarySheetTemplate(props: SalarySheetTemplateProps): st
   const workDoneTotal = () =>
     columnTotal((r) => r.headerItems, 'RC') + columnTotal((r) => r.headerItems, 'DC');
 
+  // These earning columns print with an explicit "Allowance" suffix even though
+  // the underlying data label (used for lookups/totals) stays plain.
+  const ALLOWANCE_LABELS = new Set(['bike & fuel', 'mobile data', 'mobile phone']);
+  const displayEarningLabel = (label: string) =>
+    ALLOWANCE_LABELS.has(label.trim().toLowerCase()) ? `${label} Allowance` : label;
+
   // Wider tables need smaller type to stay inside one landscape page.
   const columnCount =
     12 +
@@ -349,10 +355,10 @@ export function generateSalarySheetTemplate(props: SalarySheetTemplateProps): st
                 <th>NAME</th>
                 <th>JOB ROLE</th>
                 ${hasWorkingDays ? '<th class="text-center">WORKING DAYS</th>' : ''}
+                ${hasWorkDone ? '<th class="text-center">WORK DONE</th>' : ''}
                 <th class="text-right">BASIC</th>
                 ${otherHeaderLabels.map((label) => `<th class="text-center">${escapeHtml(label.toUpperCase())}</th>`).join('')}
-                ${earningLabels.map((label) => `<th class="text-right">${escapeHtml(label.toUpperCase())}</th>`).join('')}
-                ${hasWorkDone ? '<th class="text-center">WORK DONE</th>' : ''}
+                ${earningLabels.map((label) => `<th class="text-right">${escapeHtml(displayEarningLabel(label).toUpperCase())}</th>`).join('')}
                 <th class="text-right">GROSS</th>
                 <th class="text-right">EPF(8%)</th>
                 <th class="text-right">LOSSES</th>
@@ -372,10 +378,10 @@ export function generateSalarySheetTemplate(props: SalarySheetTemplateProps): st
                   <td class="wrap">${emp.employeeName || 'N/A'}</td>
                   <td class="wrap">${emp.jobTitle || 'N/A'}</td>
                   ${hasWorkingDays ? `<td class="text-center">${formatCount(itemValue(headerItems, 'Working Days'))}</td>` : ''}
+                  ${hasWorkDone ? `<td class="text-center">${formatCount(workDoneValue(headerItems))}</td>` : ''}
                   <td class="text-right">${(emp.basicSalary || 0).toFixed(2)}</td>
                   ${otherHeaderLabels.map((label) => `<td class="text-center">${formatCount(itemValue(headerItems, label))}</td>`).join('')}
                   ${earningLabels.map((label) => `<td class="text-right">${itemValue(earningItems, label).toFixed(2)}</td>`).join('')}
-                  ${hasWorkDone ? `<td class="text-center">${formatCount(workDoneValue(headerItems))}</td>` : ''}
                   <td class="text-right">${(emp.grossSalary || 0).toFixed(2)}</td>
                   <td class="text-right">${(emp.deductions?.epfEmployee || 0).toFixed(2)}</td>
                   <td class="text-right">${(emp.deductions?.losses || 0).toFixed(2)}</td>
@@ -393,10 +399,10 @@ export function generateSalarySheetTemplate(props: SalarySheetTemplateProps): st
               <tr>
                 <td colspan="3" class="text-center">TOTAL</td>
                 ${hasWorkingDays ? `<td class="text-center">${formatCount(columnTotal((r) => r.headerItems, 'Working Days'))}</td>` : ''}
+                ${hasWorkDone ? `<td class="text-center">${formatCount(workDoneTotal())}</td>` : ''}
                 <td class="text-right">${totals.totalBasicSalary.toFixed(2)}</td>
                 ${otherHeaderLabels.map((label) => `<td class="text-center">${formatCount(columnTotal((r) => r.headerItems, label))}</td>`).join('')}
                 ${earningLabels.map((label) => `<td class="text-right">${columnTotal((r) => r.earningItems, label).toFixed(2)}</td>`).join('')}
-                ${hasWorkDone ? `<td class="text-center">${formatCount(workDoneTotal())}</td>` : ''}
                 <td class="text-right">${totals.totalGrossSalary.toFixed(2)}</td>
                 <td class="text-right">${totals.totalEpfEmp.toFixed(2)}</td>
                 <td class="text-right">${totals.totalLosses.toFixed(2)}</td>
